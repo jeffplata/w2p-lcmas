@@ -1,0 +1,81 @@
+{{extend 'layout_ext.html'}}
+
+<div>
+    <h2>Dashboard</h2>
+</div>
+
+<div class="row">
+    <div class="col-md-6  ">
+        <div id="tav" class="col-md-12 border"  style="text-align: center; border-radius: 5px;">
+            <h4>Total TAV:<br/> <strong>P 100,200.00</strong></h4>
+            <br/>
+                <strong>Last contribution:</strong><br/>
+                {{=last_cont_date.strftime('%b %d, %Y')}}<br/>
+                {{="P {:,.2f}".format(last_cont_amt)}}
+                <div style="text-align: right;">
+                    {{=A("see more...",_href=URL("contributions_by_year", args=me))}}
+                </div>
+        </div>
+        <br/>
+        <div id="loans" class="col-md-12 border" style="border-radius: 5px;">
+            <h4>Your Loans:</h4>
+            <table class="table table-condensed table-striped table-responsive">
+                <thead style="font-weight: bold">
+                    <td>Date
+                    </td>
+                    <td>Type
+                    </td>
+                    <td>Amount
+                    </td>
+                    <td>Balance
+                    </td>
+                    <td>Status
+                    </td>
+                </thead>
+                <tr>
+                    <td>02/12/2023
+                    </td>
+                    <td>MCLP
+                    </td>
+                    <td>51,000.00
+                    </td>
+                    <td>51,000.00
+                    </td>
+                    <td>Approved
+                    </td>
+                </tr>
+                <tr>
+                    <td>{{=loans['date']}}
+                    </td>
+                    <td>{{=loans['type']}}
+                    </td>
+                    <td>{{=loans['amount']}}
+                    </td>
+                    <td>{{=loans['balance']}}
+                    </td>
+                    <td>{{=loans['status']}}
+                    </td>
+                </tr>
+            </table>
+                <div style="text-align: right;">
+                    {{=A("see more...",_href="#")}}
+                </div>
+        </div>
+        <br>
+    </div>
+    <div class="col-md-6">
+        <div id="services" class="col-md-12  border " style="border-radius: 5px;">
+            <h4>Services:</h4>
+            <div class="p-2" >
+                {{for s in services:}}
+                <strong>{{=s.name}}</strong><br/>
+                {{=s.description}}<br/>
+                Interest rate: {{=s.interest_rate}}%<br/>
+                {{=A("Apply now", _href=URL('apply_for_loan', args=s.id, user_signature=True), _class="btn btn-primary")}}
+                <br/>
+                <br/>
+                {{pass}}
+            </div>
+        </div>
+    </div>
+</div>

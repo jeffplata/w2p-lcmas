@@ -1,0 +1,16 @@
+[2023-02-15 09:02:16] START
+[2023-02-15 09:04:06] EDIT LCMAS/views/default/index.html: -36
+[2023-02-15 09:04:29] EDIT LCMAS/views/default/index.html: -7
+[2023-02-15 13:33:43] EDIT LCMAS/views/layout.html: -3
+[2023-02-15 13:34:59] EDIT LCMAS/models/menu.py: -94
+[2023-02-15 13:35:53] EDIT LCMAS/controllers/default.py: -1
+[2023-02-15 13:36:49] EDIT LCMAS/views/layout.html: 0
+[2023-02-15 13:37:04] EDIT LCMAS/views/layout.html: 0
+[2023-02-15 15:43:21] EDIT LCMAS/views/layout.html: 0
+[2023-02-15 15:43:55] EDIT LCMAS/views/layout.html: 0
+[2023-02-15 15:48:21] EDIT LCMAS/views/default/index.html: 2
+[2023-02-15 15:50:08] EDIT LCMAS/views/default/index.html: 0
+[2023-02-15 15:50:50] EDIT LCMAS/views/default/index.html: 0
+[2023-02-15 15:51:25] EDIT LCMAS/views/default/index.html: 0
+[2023-02-15 15:52:54] EDIT LCMAS/views/default/index.html: 0
+[2023-02-15 15:53:05] EDIT LCMAS/views/default/index.html: 0

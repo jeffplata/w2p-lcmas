@@ -1,0 +1,13 @@
+{{extend 'layout_ext.html'}}
+
+<h1>Thank you</h1>
+<br>
+<p>
+    Your loan application has been submitted.
+</p>
+<p>
+    To continue, you must <strong>upload</strong> supporting documents or <strong>skip</strong> this process.
+</p>
+<br>
+{{=A("Upload", _href=URL("upload_loan_files"), _class="btn btn-primary")}}
+{{=A("Skip", _href=URL("index"), _class="btn btn-secondary")}}
