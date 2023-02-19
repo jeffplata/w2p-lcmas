@@ -49,4 +49,26 @@ def user():
     to decorate functions that need access control
     also notice there is http://..../[app]/appadmin/manage/auth to allow administrator to manage users
     """
-    return dict(form=auth())
+    if request.args(0) == 'profile':
+        response.view = 'default/custom_user.html'
+        m_id = db(db.member_info.user_id==auth.user_id).select(db.member_info.id).first()
+        if m_id:
+            member = db(db.auth_user.id==auth.user_id).select('first_name', 'last_name', 'middle_name').first()
+        else:
+            member = db(db.auth_user.id==auth.user_id).select('first_name', 'last_name', 'middle_name').first()
+        # fields = ['first_name', 'last_name', 'middle_name', 'email', 'employee_no',\
+        #             'birth_date', 'gender', 'civil_status']
+        # fields = ['auth_user.first_name', 'auth_user.last_name', 'auth_user.middle_name', 'auth_user.email', 'employee_no']
+        # form = SQLFORM.grid(query, 
+        #     fields=fields)
+        form = SQLFORM.factory(**member.fields)
+        if form.process().accepted:
+            response.flash = "Changes accepted"
+            redirect(URL('index'))
+
+    else:
+        form = auth()
+    return locals()
+
+    # this is the original, single code
+    # return dict(form=auth())

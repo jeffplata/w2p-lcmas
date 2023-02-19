@@ -41,7 +41,15 @@ db.define_table("loan",
     auth.signature
     )
 
-db.define_table("user_info",
+db.define_table("member_info",
     Field("user_id", "reference auth_user"),
-    Field("employee_no", length=20)
+    Field("employee_no", length=20, requires=IS_NOT_EMPTY()),
+    Field("birth_date","date", requires=IS_NOT_EMPTY()),
+    Field("gender", length=6, requires=IS_IN_SET(["male", "female", ])),
+    Field("civil_status", requires=IS_IN_SET(["single", "married", "divorced", "separated", "widowed", ])),
+    Field("mobile_number", length=80),
+    Field("home_address", length=128),
+    Field("date_membership", "date",),
+    Field("entrance_to_duty", "date",),
+
     )

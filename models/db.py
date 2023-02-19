@@ -93,7 +93,10 @@ auth = Auth(db, host_names=configuration.get('host.names'))
 # -------------------------------------------------------------------------
 auth.settings.extra_fields['auth_user'] = [
     Field("middle_name", length=128, default=""),
-    Field("employee_no", length=20, default="")
+    Field("employee_no", length=20, default=""),
+    Field("is_member", "boolean", default=True, widget=SQLFORM.widgets.options.widget,
+        requires=IS_IN_SET([True,False]), ),
+
     ]
 auth.define_tables(username=False, signature=False)
 db.auth_user.employee_no.requires=IS_NOT_IN_DB(db, db.auth_user.employee_no)
