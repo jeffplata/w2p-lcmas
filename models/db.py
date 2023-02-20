@@ -92,8 +92,8 @@ auth = Auth(db, host_names=configuration.get('host.names'))
 # create all tables needed by auth, maybe add a list of extra fields
 # -------------------------------------------------------------------------
 auth.settings.extra_fields['auth_user'] = [
-    Field("middle_name", length=128, default=""),
-    Field("employee_no", length=20, default=""),
+    Field("middle_name", length=128, default="", map_none=''),
+    Field("employee_no", length=20, default="", map_none=''),
     Field("is_member", "boolean", default=True, widget=SQLFORM.widgets.options.widget,
         requires=IS_IN_SET([True,False]), ),
 

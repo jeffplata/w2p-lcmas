@@ -32,7 +32,35 @@ def apply_for_loan():
 def loan_success():
     return locals()
 
+def custom_profile():
+    response.view = 'default/custom_user.html'
+    user = db.auth_user(auth.user_id)
+    m_info = db.member_info(db.member_info.user_id==auth.user_id)
+    fields = [db.auth_user.first_name, db.auth_user.last_name, db.auth_user.middle_name, db.auth_user.email, db.auth_user.employee_no]
+    for f in fields:
+        f.default = user[f.name]
+    if m_info:
+        fields2 = [db.member_info.birth_date, db.member_info.gender, db.member_info.civil_status]
+        for f in fields2:
+            f.default = m_info[f.name]
+        fields += fields2
+
+    form = SQLFORM.factory(*fields, readonly=True)
+    # ... this code only works for editing
+    # for f in db.auth_user:
+    #     form.vars[f.name] = user[f.name]
+    # if m_info:
+    #     for f in db.member_info:
+    #         form.vars[f.name] = m_info[f.name]
+    # form.element('#no_table_email')['_readonly'] = 'readonly'
+    if form.process().accepted:
+        response.flash = "Changes accepted"
+        redirect(URL('index'))
+    return form
+
+
     # ---- Action for login/register/etc (required for auth) -----
+# @auth.requires_login()
 def user():
     """
     exposes:
@@ -50,22 +78,7 @@ def user():
     also notice there is http://..../[app]/appadmin/manage/auth to allow administrator to manage users
     """
     if request.args(0) == 'profile':
-        response.view = 'default/custom_user.html'
-        m_id = db(db.member_info.user_id==auth.user_id).select(db.member_info.id).first()
-        if m_id:
-            member = db(db.auth_user.id==auth.user_id).select('first_name', 'last_name', 'middle_name').first()
-        else:
-            member = db(db.auth_user.id==auth.user_id).select('first_name', 'last_name', 'middle_name').first()
-        # fields = ['first_name', 'last_name', 'middle_name', 'email', 'employee_no',\
-        #             'birth_date', 'gender', 'civil_status']
-        # fields = ['auth_user.first_name', 'auth_user.last_name', 'auth_user.middle_name', 'auth_user.email', 'employee_no']
-        # form = SQLFORM.grid(query, 
-        #     fields=fields)
-        form = SQLFORM.factory(**member.fields)
-        if form.process().accepted:
-            response.flash = "Changes accepted"
-            redirect(URL('index'))
-
+        form = custom_profile()
     else:
         form = auth()
     return locals()
