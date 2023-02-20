@@ -41,6 +41,12 @@ db.define_table("loan",
     auth.signature
     )
 
+db.define_table('department',
+    Field('name', length=80, requires=IS_NOT_EMPTY()),
+    Field('short_name', length=20, requires=IS_NOT_EMPTY()),
+    format='%(name)s'
+    )
+
 db.define_table("member_info",
     Field("user_id", "reference auth_user"),
     Field("employee_no", length=20, requires=IS_NOT_EMPTY()),
@@ -52,4 +58,18 @@ db.define_table("member_info",
     Field("date_membership", "date", requires=IS_DATE(format='%m/%d/%Y')),
     Field("entrance_to_duty", "date", requires=IS_DATE(format='%m/%d/%Y')),
 
+    )
+
+db.define_table('service_record',
+    Field('user_id', 'reference auth_user'),
+    Field('date_effective', 'date', requires=IS_DATE(format='%m/%d/%Y')),
+    Field('department_id', 'reference department'),
+    Field('mem_position', length=50, label='position'),
+    Field('salary', 'decimal(15,2)'),
+    Field('status', length=8, default='pending', requires=IS_IN_SET(['pending', 'approved'])),
+    )
+
+db.define_table('service_record_attachment',
+    Field('service_record_id', 'reference service_record'),
+    Field('doc', 'upload'),
     )

@@ -53,10 +53,20 @@ def custom_profile():
     #     for f in db.member_info:
     #         form.vars[f.name] = m_info[f.name]
     # form.element('#no_table_email')['_readonly'] = 'readonly'
-    if form.process().accepted:
-        response.flash = "Changes accepted"
-        redirect(URL('index'))
-    return form
+
+    # if form.process().accepted:
+    #     response.flash = "Changes accepted"
+    #     redirect(URL('index'))
+    sr_heads = ['Date', 'Position', 'Salary']
+    sr_rows = db(db.service_record.user_id==auth.user_id).select(
+        # db.service_record.date_effective, db.service_record.mem_position, db.service_record.salary)
+        'date_effective', 'mem_position', 'salary')
+    t = TABLE(_class='table table-sm table-striped table-responsive')
+    t.append(THEAD(TR(sr_heads), _style="font-weight:600"))
+    for r in sr_rows:
+        t.append(TR(TD(r.date_effective),TD(r.mem_position),TD(r.salary)))
+
+    return dict(form=form, sr_table=t)
 
 
     # ---- Action for login/register/etc (required for auth) -----
@@ -78,7 +88,12 @@ def user():
     also notice there is http://..../[app]/appadmin/manage/auth to allow administrator to manage users
     """
     if request.args(0) == 'profile':
-        form = custom_profile()
+        if auth.is_logged_in():
+            forms = custom_profile()
+            form = forms['form']
+            sr_table = forms['sr_table']
+        else:
+            redirect(URL('index'))
     else:
         form = auth()
     return locals()

@@ -16,7 +16,7 @@
 
     <div class="tab-content" id="nav-tabContent">
         <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab"><br>{{=form}}</div>
-        <div class="tab-pane fade" id="nav-service" role="tabpanel" aria-labelledby="nav-service-tab"><br>Service record</div>
+        <div class="tab-pane fade" id="nav-service" role="tabpanel" aria-labelledby="nav-service-tab"><br>{{=sr_table}}</div>
         <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab"><br>List of dependents</div>
     </div>
 
@@ -46,5 +46,8 @@
 {{elif request.args(0)=='change_password':}}
     web2py_validate_entropy(jQuery('#no_table_new_password'),100);
 {{pass}}
+
+$('label').css('font-weight', '600');
+
 </script>
 {{end page_js}}
