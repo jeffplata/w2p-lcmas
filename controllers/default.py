@@ -59,18 +59,16 @@ def custom_profile():
     #     redirect(URL('index'))
     sr_heads = ['Date', 'Position', 'Salary']
     sr_rows = db(db.service_record.user_id==auth.user_id).select(
-        # db.service_record.date_effective, db.service_record.mem_position, db.service_record.salary)
         'date_effective', 'mem_position', 'salary')
     t = TABLE(_class='table table-sm table-striped table-responsive')
     t.append(THEAD(TR(sr_heads), _style="font-weight:600"))
     for r in sr_rows:
-        t.append(TR(TD(r.date_effective),TD(r.mem_position),TD(r.salary)))
+        t.append(TR(r.date_effective,r.mem_position,"{:,.2f}".format(r.salary)))
 
     return dict(form=form, sr_table=t)
 
 
     # ---- Action for login/register/etc (required for auth) -----
-# @auth.requires_login()
 def user():
     """
     exposes:
