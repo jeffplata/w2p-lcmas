@@ -94,11 +94,11 @@ auth = Auth(db, host_names=configuration.get('host.names'))
 auth.settings.extra_fields['auth_user'] = [
     Field("middle_name", length=128, default="", map_none=''),
     Field("employee_no", length=20, default="", map_none=''),
-    Field("is_member", "boolean", default=True ),
+    # Field("is_member", "boolean", default=True ),
 
     ]
 auth.define_tables(username=False, signature=False)
-db.auth_user.employee_no.requires=IS_NULL_OR(IS_NOT_IN_DB(db, db.auth_user.employee_no))
+db.auth_user.employee_no.requires=IS_EMPTY_OR(IS_NOT_IN_DB(db, db.auth_user.employee_no))
 # -------------------------------------------------------------------------
 # configure email
 # -------------------------------------------------------------------------
