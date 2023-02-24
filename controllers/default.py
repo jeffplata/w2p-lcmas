@@ -4,6 +4,8 @@
 # this file is released under public domain and you can use without limitations
 # -------------------------------------------------------------------------
 
+from gluon.tools import prettydate
+
 @auth.requires_login()
 def index():
     import datetime
@@ -41,16 +43,17 @@ def custom_profile():
     pending_request = miur(miur.user_id==auth.user_id )
     fields = [db.auth_user.first_name, db.auth_user.last_name, db.auth_user.middle_name, db.auth_user.email]
     t = None
+    edit_request = request.vars['edit'] == '2'
     for f in fields:
         if f.name == 'email':
             f.default = user.email
         else:
-            f.default = user[f.name] if not pending_request else pending_request[f.name]
+            f.default = user[f.name] if not edit_request else pending_request[f.name]
     if m_info:
         fields2 = [db.member_info.employee_no, db.member_info.birth_date, db.member_info.gender, db.member_info.civil_status,
             db.member_info.entrance_to_duty, db.member_info.date_membership]
         for f in fields2:
-            f.default = m_info[f.name] if not pending_request else pending_request[f.name]
+            f.default = m_info[f.name] if not edit_request else pending_request[f.name]
         fields += fields2
 
         sr_heads = ['Date', 'Position', 'Salary']
@@ -67,33 +70,49 @@ def custom_profile():
     db.auth_user.employee_no.requires = IS_EMPTY_OR(IS_NOT_IN_DB(employee_nos, 'auth_user.employee_no'))
     old_values = {}
     readonly = False if request.vars else True
-    form = SQLFORM.factory(*fields, readonly=readonly)
     if readonly:
+        form = SQLFORM.factory(*fields, readonly=readonly)
         title = 'Profile'
         if pending_request:
-            form.append(DIV("You have pending change request. ", A("View", _href=URL("custom_profile", vars={'edit':1})) ,
+            form.append(DIV("You have a pending change request. ", A("View", _href=URL("custom_profile", vars={'edit':2})) ,
                 _class="border border-info rounded p-3"))
         else:
             form.append(A("Update my info", _href=URL("custom_profile", vars={'edit':1}), _class="btn btn-primary"))
     else:
-        title = 'Update my info'
+        if edit_request:
+            form = SQLFORM.factory(*fields, Field("Check_to_Delete", "boolean", default=False))
+        else:
+            form = SQLFORM.factory(*fields)
+        title = 'Update my profile'
         form.element('#no_table_email')['_readonly'] = 'readonly'
         form.append(INPUT(_type='hidden', _name='user_id', _value=auth.user_id))
         form.element('#submit_record__row')[1].insert(1,A("Back", _href=URL("custom_profile"), _class="btn btn-secondary"))
+        if edit_request:
+            form.insert(0, DIV(f"This change request was submitted {prettydate(pending_request.date_submitted)}.",
+                _class="border border-info rounded p-3"))
+            form.insert(1, BR())
         for f in fields:
             old_values[f.name] = f.default
         if form.process().accepted:
-            # check for from changes
-            change_detected = False
-            for f in fields:
-                if old_values[f.name] != form.vars[f.name]: 
-                    change_detected = True
-                    break
-            if change_detected:
-                id = db.member_info_update_request.insert(**db.member_info_update_request._filter_fields(form.vars))
-                session.flash = "Change request submitted"
+            # check for form changes
+            if form.vars['Check_to_Delete']:
+                db(db.member_info_update_request.id==pending_request.id).delete()
+                session.flash = "Change request deleted"
             else:
-                session.flash = "No change detected"
+                change_detected = False
+                for f in fields:
+                    if old_values[f.name] != form.vars[f.name]: 
+                        change_detected = True
+                        break
+                if change_detected:
+                    if edit_request:
+                        pending_request.update_record(**db.member_info_update_request._filter_fields(form.vars))
+                        session.flash = "Change request updated"
+                    else:
+                        id = db.member_info_update_request.insert(**db.member_info_update_request._filter_fields(form.vars))
+                        session.flash = "Change request submitted"
+                else:
+                    session.flash = "No change detected"
             redirect(URL('user/profile'))
 
     # ... this code only works for editing
@@ -109,9 +128,21 @@ def custom_profile():
     #     redirect(URL('index'))
     return dict(form=form, sr_table=t, title=title)
 
-def update_my_info():
+@auth.requires_login()
+def service_record():
+    db.service_record.user_id.default = auth.user_id
+    form = SQLFORM(db.service_record, fields=['date_effective', 'mem_position', 'salary']).process()
+    # service_records = db(db.service_record.user_id==auth.user_id).select()
 
-    return locals()
+    sr_rows = db(db.service_record.user_id==auth.user_id).select(
+        'date_effective', 'mem_position', 'salary', orderby=~db.service_record.date_effective|~db.service_record.id)
+    sr_heads = ['Date', 'Position', 'Salary']
+    t = TABLE(_class='table table-sm table-striped table-responsive')
+    t.append(THEAD(TR(sr_heads), _style="font-weight:600"))
+    for r in sr_rows:
+        t.append(TR(r.date_effective,r.mem_position,"{:,.2f}".format(r.salary)))
+
+    return dict(form=form, table=t)
 
     # ---- Action for login/register/etc (required for auth) -----
 def user():

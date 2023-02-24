@@ -1,5 +1,8 @@
 
+from datetime import datetime
 me = auth.user_id
+mdy = '%m/%d/%Y'
+mdy_date = IS_DATE(format='%m/%d/%Y')
 
 db.define_table("service_payment_type",
     Field("name", "string", requires=[IS_NOT_EMPTY(), IS_SLUG()]),
@@ -62,9 +65,9 @@ db.define_table("member_info",
 
 db.define_table('service_record',
     Field('user_id', 'reference auth_user'),
-    Field('date_effective', 'date', requires=IS_DATE(format='%m/%d/%Y')),
+    Field('date_effective', 'date', requires=mdy_date),
     Field('department_id', 'reference department'),
-    Field('mem_position', length=50, label='position'),
+    Field('mem_position', length=50, label='Position'),
     Field('salary', 'decimal(15,2)'),
     Field('status', length=8, default='pending', requires=IS_IN_SET(['pending', 'approved'])),
     )
@@ -79,12 +82,13 @@ db.define_table("member_info_update_request",
     Field("first_name", length=80, requires=IS_NOT_EMPTY()),
     Field("last_name", length=80, requires=IS_NOT_EMPTY()),
     Field("middle_name", length=80),
-    Field("employee_no", length=20, requires=IS_NOT_EMPTY()),
-    Field("birth_date", "date"),
+    Field("employee_no", length=20),
+    Field("birth_date", "date", requires=IS_EMPTY_OR(mdy_date)),
     Field("gender", length=6),
     Field("civil_status", length=10),
-    Field("date_membership", "date", requires=IS_DATE(format='%m/%d/%Y')),
-    Field("entrance_to_duty", "date", requires=IS_DATE(format='%m/%d/%Y')),
+    Field("date_membership", "date", requires=IS_EMPTY_OR(mdy_date)),
+    Field("entrance_to_duty", "date", requires=IS_EMPTY_OR(mdy_date)),
+    Field("date_submitted", "date", default=datetime.today, requires=mdy_date),
     Field('status', length=8, default='pending', requires=IS_IN_SET(['pending', 'approved'])),
 
     )
