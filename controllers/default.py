@@ -131,18 +131,40 @@ def custom_profile():
 @auth.requires_login()
 def service_record():
     db.service_record.user_id.default = auth.user_id
-    form = SQLFORM(db.service_record, fields=['date_effective', 'mem_position', 'salary']).process()
-    # service_records = db(db.service_record.user_id==auth.user_id).select()
+    if db((db.service_record.user_id==auth.user_id) & (db.service_record.status=='pending')).select():
+        form = DIV('New record can only be added when all pending requests have been approved.', _class="border border-info rounded p-3 responsive")
+    else:
+        form = SQLFORM(db.service_record, fields=['date_effective', 'department_id', 'mem_position', 'salary'], 
+            formstyle='').process()
 
-    sr_rows = db(db.service_record.user_id==auth.user_id).select(
-        'date_effective', 'mem_position', 'salary', orderby=~db.service_record.date_effective|~db.service_record.id)
-    sr_heads = ['Date', 'Position', 'Salary']
+    departments = {}
+    for x in db(db.department).select():
+        departments[x.id] = x.short_name
+    srt = db.service_record
+    sr_rows = db(db.service_record.user_id==auth.user_id,).select(
+
+        orderby=~db.service_record.date_effective|~db.service_record.id)
     t = TABLE(_class='table table-sm table-striped table-responsive')
-    t.append(THEAD(TR(sr_heads), _style="font-weight:600"))
+    t.append(THEAD(TR(['Date', 'Department', 'Position', 'Salary', 'status', '']), _style="font-weight:600"))
     for r in sr_rows:
-        t.append(TR(r.date_effective,r.mem_position,"{:,.2f}".format(r.salary)))
+        t.append(TR(r.date_effective, departments[r.department_id], r.mem_position, "{:,.2f}".format(r.salary), 
+            TD(r.status, _class="text-muted font-italic"),
+            # TD(A("Delete", _href=URL("service_record_del_request", args=r.id), cid=999) if r.status=='pending' else ''))
+            TD(A("Delete", callback=URL("service_record_del_request", vars={'id':r.id}), delete='tr') if r.status=='pending' else ''))
+        )
 
     return dict(form=form, table=t)
+
+@auth.requires_login()
+def service_record_del_request():
+    # member deletes their own pending request
+    id = request.vars.id
+    if db(db.service_record.id==id).delete():
+        redirect(URL('service_record'))
+    else:
+        return 'false'
+    # redirect(request.env.http_web2py_component_location, client_side=True)
+
 
     # ---- Action for login/register/etc (required for auth) -----
 def user():

@@ -1,4 +1,9 @@
 <div class="sr">
     {{=table}}
 </div>
+<h4>
+    Add new service record
+</h4>
+<div id="999">
+</div>
 {{=form}}
