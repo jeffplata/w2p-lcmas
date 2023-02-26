@@ -8,12 +8,22 @@ from gluon.tools import prettydate
 
 @auth.requires_login()
 def index():
+    return locals()
+
+@auth.requires_login()
+def member_dash():
     import datetime
     services = db(db.service).select()
     loans = {'date':'01/16/2023', 'type':'MCLP', 'amount':52000, 'balance':52000, 'status':'submitted'}
     tav = 100290.00
     last_cont_date = datetime.datetime(2023,1,9)
     last_cont_amt = 2045.00
+    return locals()
+
+@auth.requires_login()
+def record_dash():
+    member_requests = db(db.member_info_update_request).select()
+    grid = SQLFORM.grid(db.member_info_update_request)
     return locals()
 
 @auth.requires_login()
@@ -130,12 +140,19 @@ def custom_profile():
 
 @auth.requires_login()
 def service_record():
+    no_form = True
     db.service_record.user_id.default = auth.user_id
     if db((db.service_record.user_id==auth.user_id) & (db.service_record.status=='pending')).select():
         form = DIV('New record can only be added when all pending requests have been approved.', _class="border border-info rounded p-3 responsive")
     else:
-        form = SQLFORM(db.service_record, fields=['date_effective', 'department_id', 'mem_position', 'salary'], 
-            formstyle='').process()
+        # form = SQLFORM(db.service_record, fields=['date_effective', 'department_id', 'mem_position', 'salary'], 
+        #     formstyle='').process()
+        no_form = False
+        db.service_record.user_id.writable = False
+        db.service_record.user_id.readable = False
+        db.service_record.status.writable = False
+        db.service_record.status.readable = False
+        form = SQLFORM.factory(db.service_record)
 
     departments = {}
     for x in db(db.department).select():
@@ -149,9 +166,13 @@ def service_record():
     for r in sr_rows:
         t.append(TR(r.date_effective, departments[r.department_id], r.mem_position, "{:,.2f}".format(r.salary), 
             TD(r.status, _class="text-muted font-italic"),
-            # TD(A("Delete", _href=URL("service_record_del_request", args=r.id), cid=999) if r.status=='pending' else ''))
             TD(A("Delete", callback=URL("service_record_del_request", vars={'id':r.id}), delete='tr') if r.status=='pending' else ''))
         )
+
+    if not no_form:
+        if form.process().accepted:
+            db.service_record.insert(**db.service_record._filter_fields(form.vars))
+            redirect(URL('service_record'))
 
     return dict(form=form, table=t)
 
@@ -159,12 +180,10 @@ def service_record():
 def service_record_del_request():
     # member deletes their own pending request
     id = request.vars.id
-    if db(db.service_record.id==id).delete():
-        redirect(URL('service_record'))
+    if not db(db.service_record.id==id).delete():
+        raise HTTP(400)
     else:
-        return 'false'
-    # redirect(request.env.http_web2py_component_location, client_side=True)
-
+        response.js = "web2py_component('%s', '%s');" % (URL('service_record'), 'service_record_div')
 
     # ---- Action for login/register/etc (required for auth) -----
 def user():

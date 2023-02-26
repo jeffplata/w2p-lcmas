@@ -18,7 +18,7 @@
 
     <div class="tab-content" id="nav-tabContent">
         <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab"><br>{{=form}}</div>
-        <div class="tab-pane fade" id="nav-service" role="tabpanel" aria-labelledby="nav-service-tab"><br>{{=LOAD("default", "service_record.load", ajax=True)}}</div>
+        <div class="tab-pane fade" id="nav-service" role="tabpanel" aria-labelledby="nav-service-tab"><br>{{=LOAD("default", "service_record.load", ajax=True, target='service_record_div')}}</div>
         <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab"><br>List of dependents</div>
     </div>
 
