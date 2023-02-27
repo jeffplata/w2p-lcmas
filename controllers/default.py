@@ -22,8 +22,13 @@ def member_dash():
 
 @auth.requires_login()
 def record_dash():
-    member_requests = db(db.member_info_update_request).select()
-    grid = SQLFORM.grid(db.member_info_update_request)
+    grid = SQLFORM.grid(db.member_info_update_request, create=False, formname='grid_mem')
+    return locals()
+
+@auth.requires_login()
+def record_dash_sr():
+    q = db.service_record.status=='pending'
+    grid_sr = SQLFORM.grid(q, create=False, formname='grid_sr', deletable=False, csv=False, advanced_search=False)
     return locals()
 
 @auth.requires_login()
@@ -72,7 +77,7 @@ def custom_profile():
         t = TABLE(_class='table table-sm table-striped table-responsive')
         t.append(THEAD(TR(sr_heads), _style="font-weight:600"))
         for r in sr_rows:
-            t.append(TR(r.date_effective,r.mem_position,"{:,.2f}".format(r.salary)))
+            t.append(TR(r.date_effective,r.mem_position,r.salary)) #"{:,.2f}".format(r.salary)))
 
     emails = db(db.auth_user.email != user.email)
     db.auth_user.email.requires = IS_NOT_IN_DB(emails, 'auth_user.email')

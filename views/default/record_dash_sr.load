@@ -1,0 +1,6 @@
+<div class="border rounded p-3">
+    <h4>
+        Service record change requests
+    </h4>
+    {{=grid_sr}}
+</div>

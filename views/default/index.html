@@ -7,4 +7,6 @@
 {{=LOAD("default", "member_dash.load", ajax=True, target='member_dash_div')}}
 {{pass}}{{if auth.has_membership('record'):}}
 {{=LOAD("default", "record_dash.load", ajax=True, target='record_dash_div')}}
+<br>
+{{=LOAD("default", "record_dash_sr.load", ajax=True, target='record_dash_sr_div')}}
 {{pass}}

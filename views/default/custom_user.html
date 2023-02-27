@@ -22,9 +22,6 @@
         <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab"><br>List of dependents</div>
     </div>
 
-    {{# {{=form}}
-    
-
     {{if request.args(0)=='login' and not 'register' in auth.settings.actions_disabled:}}
     <a href="{{=URL('user/register')}}">{{=T('Register')}}</a>
     <br/>

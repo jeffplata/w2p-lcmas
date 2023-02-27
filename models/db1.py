@@ -60,16 +60,17 @@ db.define_table("member_info",
     Field("home_address", length=128),
     Field("date_membership", "date", requires=IS_DATE(format='%m/%d/%Y')),
     Field("entrance_to_duty", "date", requires=IS_DATE(format='%m/%d/%Y')),
-
+    auth.signature,
     )
 
 db.define_table('service_record',
-    Field('user_id', 'reference auth_user'),
+    Field('user_id', 'reference auth_user', label='Member'),
     Field('date_effective', 'date', requires=mdy_date),
     Field('department_id', 'reference department', label='Department'),
     Field('mem_position', length=50, label='Position'),
-    Field('salary', 'decimal(15,2)'),
+    Field('salary', 'decimal(15,2)', represent=lambda v, r: '{:,}'.format(v) if v is not None else ''),
     Field('status', length=8, default='pending', requires=IS_IN_SET(['pending', 'approved'])),
+    auth.signature,
     )
 
 db.define_table('service_record_attachment',
