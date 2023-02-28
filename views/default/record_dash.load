@@ -2,5 +2,14 @@
     <h4>
         Member information change requests
     </h4>
-    {{=grid}}
+    {{if grid.view_form:}}
+        Viewing form
+        {{=grid}}
+    {{else:}}
+        {{=grid}}
+    {{pass}}
 </div> 
+
+<script>
+    jQuery('.button').closest('td').attr('class', 'row_buttons');
+</script>

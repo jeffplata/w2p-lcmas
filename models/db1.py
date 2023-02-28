@@ -79,7 +79,7 @@ db.define_table('service_record_attachment',
     )
 
 db.define_table("member_info_update_request",
-    Field("user_id", "reference auth_user"),
+    Field("user_id", "reference auth_user", label='Member'),
     Field("first_name", length=80, requires=IS_NOT_EMPTY()),
     Field("last_name", length=80, requires=IS_NOT_EMPTY()),
     Field("middle_name", length=80),

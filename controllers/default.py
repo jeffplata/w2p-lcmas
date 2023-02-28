@@ -22,7 +22,8 @@ def member_dash():
 
 @auth.requires_login()
 def record_dash():
-    grid = SQLFORM.grid(db.member_info_update_request, create=False, formname='grid_mem')
+    link1 = dict(header='', body=lambda r: A('View', _class='button btn btn-default btn-secondary', _href=URL('default','record_dash', args=['view', 'member_info_update_request', r.id], user_signature=True) ))
+    grid = SQLFORM.grid(db.member_info_update_request, create=False, formname='grid_mem', deletable=False, csv=False, links=[link1])
     return locals()
 
 @auth.requires_login()
