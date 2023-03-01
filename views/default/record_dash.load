@@ -4,7 +4,7 @@
     </h4>
     {{if grid.view_form:}}
         Viewing form
-        {{=grid}}
+        {{=form}}
     {{else:}}
         {{=grid}}
     {{pass}}

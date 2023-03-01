@@ -22,9 +22,27 @@ def member_dash():
 
 @auth.requires_login()
 def record_dash():
-    link1 = dict(header='', body=lambda r: A('View', _class='button btn btn-default btn-secondary', _href=URL('default','record_dash', args=['view', 'member_info_update_request', r.id], user_signature=True) ))
+    link1 = dict(header='', body=lambda r: A('View', _class='button btn btn-default btn-secondary', 
+        _href=URL('default','record_dash', args=['view', 'member_info_update_request', r.id], user_signature=True), cid=request.cid ))
+    form = None
+    if request.args(0)=='view':
+        r = db(db.member_info_update_request.id==request.args(2)).select().first()
+        m = db.auth_user(r.user_id)
+        p = db.member_info(db.member_info.user_id==r.user_id)
+        f = 'first_name;last_name;middle_name;employee_no' 
+        t = TABLE(_class='table table-striped table-responsive')
+        t.append(THEAD(TR(['', 'Original', 'New Value']), _style="font-weight:600"))
+        for i in f.split(';'):
+            bg = 'bg-info text-white' if (m[i] != r[i]) else ''
+            t.append(TR(TD(i.capitalize().replace('_',' '), _class='font-weight-bold'), m[i], TD(r[i], _class=bg)))
+        if p:
+            f = 'birth_date;gender;civil_status;date_membership;entrance_to_duty'
+            for i in f.split(';'):
+                bg = 'bg-info text-white' if (p[i] != r[i]) else ''
+                t.append(TR(TD(i.capitalize().replace('_',' '), _class='font-weight-bold'), p[i], TD(r[i], _class=bg)))
+        form = t
     grid = SQLFORM.grid(db.member_info_update_request, create=False, formname='grid_mem', deletable=False, csv=False, links=[link1])
-    return locals()
+    return dict(grid=grid, form=form)
 
 @auth.requires_login()
 def record_dash_sr():
