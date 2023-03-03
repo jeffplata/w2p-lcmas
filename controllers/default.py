@@ -20,11 +20,18 @@ def member_dash():
     last_cont_amt = 2045.00
     return locals()
 
+_btn_back = A(SPAN(_class="icon arrowleft icon-arrow-left glyphicon glyphicon-arrow-left"),
+    ' Back', _href=URL('record_dash'), cid=request.cid, _class='btn btn-secondary')
+_btn_approve = A(SPAN('Approve', _class='font-weight-bold'), 
+                _href=URL('record_dash', args=['approve', request.args(1), request.args(2)], user_signature=True), 
+                _class='btn btn-secondary', cid=request.cid )
+_btn_disapprove =  A('Disapprove', _href='#', _class='btn', cid=request.cid)
+
 @auth.requires_login()
 def record_dash():
     link1 = dict(header='', body=lambda r: A('View', _class='button btn btn-default btn-secondary', 
         _href=URL('default','record_dash', args=['view', 'member_info_update_request', r.id], user_signature=True), cid=request.cid ))
-    form = None
+    d = None
     if request.args(0)=='view':
         r = db(db.member_info_update_request.id==request.args(2)).select().first()
         m = db.auth_user(r.user_id)
@@ -40,9 +47,39 @@ def record_dash():
             for i in f.split(';'):
                 bg = 'bg-info text-white' if (p[i] != r[i]) else ''
                 t.append(TR(TD(i.capitalize().replace('_',' '), _class='font-weight-bold'), p[i], TD(r[i], _class=bg)))
-        form = t
+        if r.status=='pending': 
+            btns = _btn_approve, _btn_disapprove
+            info = ''
+        else: 
+            btns = ''
+            info = DIV(' Approved', _class='text-success') if r.status=='approved' else DIV(' Disapproved', _class='text-danger')
+
+        d = DIV(_btn_back, *btns if r.status=='pending' else '', _class='form_header row_buttons')
+        d = DIV(d, info, _class='web2py_grid' )
+        d = DIV(d, t)
+    elif request.args(0)=='approve':
+        r = db(db.member_info_update_request.id==request.args(2)).select().first()
+        m = db.auth_user(r.user_id)
+        p = db.member_info(db.member_info.user_id==r.user_id)
+        f = 'first_name;last_name;middle_name;employee_no'
+        changed = False
+        for i in f.split(';'):
+            if m[i] != r[i]:
+                m[i] = r[i]
+                changed = True
+        if changed: m.update_record()
+        changed = False
+        if p:
+            f = 'birth_date;gender;civil_status;date_membership;entrance_to_duty'
+            for i in f.split(';'):
+                if p[i] != r[i]:
+                    p[i] = r[i]
+                    changed = True
+            if changed: p.update_record()
+        r.update_record(status='approved')
+
     grid = SQLFORM.grid(db.member_info_update_request, create=False, formname='grid_mem', deletable=False, csv=False, links=[link1])
-    return dict(grid=grid, form=form)
+    return dict(grid=grid, form=d)
 
 @auth.requires_login()
 def record_dash_sr():
@@ -74,7 +111,7 @@ def custom_profile():
     user = db.auth_user(auth.user_id)
     m_info = db.member_info(db.member_info.user_id==auth.user_id)
     miur = db.member_info_update_request
-    pending_request = miur(miur.user_id==auth.user_id )
+    pending_request = miur((miur.user_id==auth.user_id ) & (miur.status=='pending'))
     fields = [db.auth_user.first_name, db.auth_user.last_name, db.auth_user.middle_name, db.auth_user.email]
     t = None
     edit_request = request.vars['edit'] == '2'
@@ -183,7 +220,6 @@ def service_record():
         departments[x.id] = x.short_name
     srt = db.service_record
     sr_rows = db(db.service_record.user_id==auth.user_id,).select(
-
         orderby=~db.service_record.date_effective|~db.service_record.id)
     t = TABLE(_class='table table-sm table-striped table-responsive')
     t.append(THEAD(TR(['Date', 'Department', 'Position', 'Salary', 'status', '']), _style="font-weight:600"))
