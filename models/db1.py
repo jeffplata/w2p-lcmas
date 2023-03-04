@@ -92,5 +92,22 @@ db.define_table("member_info_update_request",
     Field("date_submitted", "date", default=datetime.today, requires=mdy_date),
     Field('status', length=11, default='pending', requires=IS_IN_SET(['pending', 'approved','disapproved']), 
         represent = lambda v, r : DIV('pending', _class='bg-warning') if v=='pending' else v),
+    auth.signature,
+
+    )
+
+db.define_table("member_info_update_request_hist",
+    Field('request', 'reference member_info_update_request'),
+    Field("user_id", "reference auth_user", label='Member'),
+    Field("first_name", length=80, requires=IS_NOT_EMPTY()),
+    Field("last_name", length=80, requires=IS_NOT_EMPTY()),
+    Field("middle_name", length=80),
+    Field("employee_no", length=20),
+    Field("birth_date", "date", requires=IS_EMPTY_OR(mdy_date)),
+    Field("gender", length=6),
+    Field("civil_status", length=10),
+    Field("date_membership", "date", requires=IS_EMPTY_OR(mdy_date)),
+    Field("entrance_to_duty", "date", requires=IS_EMPTY_OR(mdy_date)),
+    Field("date_submitted", "date", requires=mdy_date),
 
     )
