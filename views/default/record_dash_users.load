@@ -1,0 +1,4 @@
+<div class='p-2 m-1 rounded border'>
+    <h4>User list</h4>
+    {{=grid}}
+</div>

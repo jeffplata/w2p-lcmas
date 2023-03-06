@@ -28,6 +28,24 @@ _btn_approve = A(SPAN('Approve', _class='font-weight-bold'),
 _btn_disapprove =  A('Disapprove', _href='#', _class='btn', cid=request.cid)
 
 @auth.requires_login()
+def record_dash_main():
+    pending_requests = db(db.member_info_update_request.status=='pending').count()
+    total_requests = db(db.member_info_update_request).count()
+    pending_sr_requests = db(db.service_record.status=='pending').count()
+    total_sr_requests = db(db.service_record.status).count()
+    role_member_id = db(db.auth_group.role=='member').select('id').first().id
+    total_members = len(db(db.auth_membership.group_id==role_member_id).select(groupby=(db.auth_membership.user_id,db.auth_membership.group_id)))
+    total_non_members = db(db.auth_user).count() - total_members
+    return locals()
+
+@auth.requires_login()
+def record_dash_users():
+    grid = SQLFORM.grid(db.auth_user, fields=[db.auth_user.first_name, db.auth_user.last_name, db.auth_user.middle_name,
+        db.auth_user.employee_no, db.auth_user.email], orderby=[db.auth_user.last_name|db.auth_user.first_name],
+        create=True, formname='grid_user', deletable=False, csv=False)
+    return locals()
+
+@auth.requires_login()
 def record_dash():
     link1 = dict(header='', body=lambda r: A('View', _class='button btn btn-default btn-secondary', 
         _href=URL('default','record_dash', args=['view', 'member_info_update_request', r.id], user_signature=True), cid=request.cid ))
@@ -100,7 +118,8 @@ def record_dash():
             db.member_info_update_request_hist.insert(**h)
         r.update_record(status='approved')
 
-    grid = SQLFORM.grid(db.member_info_update_request, create=False, formname='grid_mem', deletable=False, csv=False, links=[link1])
+    grid = SQLFORM.grid(db.member_info_update_request, orderby=~db.member_info_update_request.id,
+        create=False, formname='grid_mem', deletable=False, csv=False, links=[link1])
     return dict(grid=grid, form=d)
 
 @auth.requires_login()
