@@ -3,7 +3,7 @@
     <div class='p-2 m-1 rounded border border-info'>
         Member info update requests:
         <h1><strong><p class="text-center">
-            {{=A(pending_requests, _href=URL("records", "record_dash", args=["list_requests"]), cid=request.cid)}}
+            {{=A(pending_requests, _href=URL("default", "record_dash"), cid="main_div_comp")}}
         </p></strong></h1>
         <p class="text-center">pending requests<br> {{=A(total_requests, _href="#")}} total</p>
     </div>

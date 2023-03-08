@@ -10,6 +10,18 @@ from gluon.tools import prettydate
 def index():
     return locals()
 
+def title_and_breadcrumbs():
+    # s = request.args(0)
+    # b = request.args(1)
+    s = request.vars["title"] or ""
+    b = request.vars["breadcrumbs"]
+    print(b)
+    bc = {}
+    if b:
+        bc = dict(x.split("=") for x in b.split(";"))
+    title = DIV(H2(s))
+    return dict(title=title, breadcrumbs=bc)
+
 @auth.requires_login()
 def member_dash():
     import datetime

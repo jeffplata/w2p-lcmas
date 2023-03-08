@@ -1,12 +1,15 @@
 {{extend 'layout_ext.html'}}
 
+<!--
 <div>
     <h2>Dashboard</h2>
 </div>
+-->
 {{if auth.has_membership('member'):}}
     {{=LOAD("default", "member_dash.load", ajax=True, target='member_dash_div')}}
 {{pass}}
 {{if auth.has_membership('record'):}}
+    {{=LOAD("default", "title_and_breadcrumbs.load", vars={"title":"Dashboard"}, ajax=True, target="title_and_breadcrumbs_div")}}
     {{=LOAD("default", "record_dash_main.load", ajax=True, target="record_dash_main_div")}}
     <br>
     {{=LOAD("default", "record_dash_users.load", ajax=True, target="record_dash_users_div")}}
