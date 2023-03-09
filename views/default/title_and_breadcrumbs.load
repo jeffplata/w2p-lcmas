@@ -1,12 +1,7 @@
-{{=title}}
+{{if title:}}
+    {{=title}}
+{{pass}}
 
 {{if breadcrumbs:}}
-    <div class="rounded p-2" style="background: #EAEAEA;">
-    {{for k, v in breadcrumbs.items():}}
-        {{if v=='9':}} {{=k}}
-        {{else:}} {{=A(k,_href=URL(v))}}
-        {{print(v)}}
-        {{pass}}
-    {{pass}}
-    </div>
+    {{=breadcrumbs}}
 {{pass}}

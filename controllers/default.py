@@ -13,14 +13,20 @@ def index():
 def title_and_breadcrumbs():
     # s = request.args(0)
     # b = request.args(1)
-    s = request.vars["title"] or ""
+    t = request.vars["title"] or ""
     b = request.vars["breadcrumbs"]
-    print(b)
     bc = {}
+    s = []
     if b:
         bc = dict(x.split("=") for x in b.split(";"))
-    title = DIV(H2(s))
-    return dict(title=title, breadcrumbs=bc)
+        l = len(bc)
+        for i, (k, v) in enumerate(bc.items()):
+            if v=='': s.append(k)
+            else: s.append( A(k, _href=v) )
+            if i+1 != l: s.append(' >> ')
+    title = DIV(H2(t)) if t else ''
+    breadcrumbs = DIV(*s, _class='rounded p-2', _style='background: #EAEAEA') if s else ''
+    return dict(title=title, breadcrumbs=breadcrumbs)
 
 @auth.requires_login()
 def member_dash():
@@ -38,6 +44,25 @@ _btn_approve = A(SPAN('Approve', _class='font-weight-bold'),
                 _href=URL('record_dash', args=['approve', request.args(1), request.args(2)], user_signature=True), 
                 _class='btn btn-secondary', cid=request.cid )
 _btn_disapprove =  A('Disapprove', _href='#', _class='btn', cid=request.cid)
+
+def record_member_update():
+    return locals()
+
+def record_dash_reload():
+    # c = [LOAD("default", "title_and_breadcrumbs.load", vars={"title":"Dashboard"}, ajax=True, target="title_and_breadcrumbs_div"),
+    #      LOAD("default", "record_dash_main.load", ajax=True, target="record_dash_main_div"),
+    #      BR(),
+    #      LOAD("default", "record_dash_users.load", ajax=True, target="record_dash_users_div")]
+    # c = [LOAD("default", "title_and_breadcrumbs.load", vars={"title":"Dashboard"}, ajax=True, target="main_div_comp"),
+    #      LOAD("default", "record_dash_main.load", ajax=True, target="record_dash_main_div"),
+    #      BR(),
+    #      LOAD("default", "record_dash_users.load", ajax=True, target="record_dash_users_div")]
+    c = [
+         LOAD("default", "title_and_breadcrumbs.load", vars={"title":"","breadcrumbs":"dashboard=index;Member information change request="}, ajax=True, target="title_div_comp"),
+         LOAD("default", "record_dash_users.load", vars={"title":"Dashddboard"}, ajax=True, target="main_div_comp")
+         ]
+    # response.js = 'jQuery(#%s).hide()' % 'record_dash_main_div'
+    return LOAD("default", "title_and_breadcrumbs.load", vars={"title":"","breadcrumbs":"dashboard=index;Member information change request="}, ajax=True, target="title_div_comp")
 
 @auth.requires_login()
 def record_dash_main():
