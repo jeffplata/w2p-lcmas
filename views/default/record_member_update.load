@@ -1,2 +1,0 @@
-{{=LOAD("default", "title_and_breadcrumbs.load", vars={"title":"","breadcrumbs":"dashboard=index;Member information change request="}, ajax=True, target="title_div_comp")}}
-{{=LOAD("default", "record_dash.load", ajax=True, target="main_div_comp")}}

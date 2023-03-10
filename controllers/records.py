@@ -1,13 +1,37 @@
 # -*- coding: utf-8 -*-
 # try something like
+_btn_back = A(SPAN(_class="icon arrowleft icon-arrow-left glyphicon glyphicon-arrow-left"),
+    ' Back', _href=URL('record_dash'), cid=request.cid, _class='btn btn-secondary')
+_btn_approve = A(SPAN('Approve', _class='font-weight-bold'), 
+                _href=URL('record_dash', args=['approve', request.args(1), request.args(2)], user_signature=True), 
+                _class='btn btn-secondary', cid=request.cid )
+_btn_disapprove =  A('Disapprove', _href='#', _class='btn', cid=request.cid)
+
+def record_member_update():
+    return dict(page=request.args(0))
+
 @auth.requires_login()
-def index(): 
-    return dict(message="hello from records.py")
+def record_dash_main():
+    pending_requests = db(db.member_info_update_request.status=='pending').count()
+    total_requests = db(db.member_info_update_request).count()
+    pending_sr_requests = db(db.service_record.status=='pending').count()
+    total_sr_requests = db(db.service_record.status).count()
+    role_member_id = db(db.auth_group.role=='member').select('id').first().id
+    total_members = len(db(db.auth_membership.group_id==role_member_id).select(groupby=(db.auth_membership.user_id,db.auth_membership.group_id)))
+    total_non_members = db(db.auth_user).count() - total_members
+    return locals()
+
+@auth.requires_login()
+def record_dash_users():
+    grid = SQLFORM.grid(db.auth_user, fields=[db.auth_user.first_name, db.auth_user.last_name, db.auth_user.middle_name,
+        db.auth_user.employee_no, db.auth_user.email], orderby=[db.auth_user.last_name|db.auth_user.first_name],
+        create=True, formname='grid_user', deletable=False, csv=False)
+    return locals()
 
 @auth.requires_login()
 def record_dash():
     link1 = dict(header='', body=lambda r: A('View', _class='button btn btn-default btn-secondary', 
-        _href=URL('default','record_dash', args=['view', 'member_info_update_request', r.id], user_signature=True), cid=request.cid ))
+        _href=URL('records','record_dash', args=['view', 'member_info_update_request', r.id], user_signature=True), cid=request.cid ))
     d = None
     if request.args(0)=='view':
         r = db(db.member_info_update_request.id==request.args(2)).select().first()
@@ -80,3 +104,9 @@ def record_dash():
     grid = SQLFORM.grid(db.member_info_update_request, orderby=~db.member_info_update_request.id,
         create=False, formname='grid_mem', deletable=False, csv=False, links=[link1])
     return dict(grid=grid, form=d)
+
+@auth.requires_login()
+def record_dash_sr():
+    q = db.service_record.status=='pending'
+    grid_sr = SQLFORM.grid(q, create=False, formname='grid_sr', deletable=False, csv=False, advanced_search=False)
+    return locals()

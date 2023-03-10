@@ -1,22 +1,13 @@
 {{extend 'layout_ext.html'}}
 
-<!--
-<div>
-    <h2>Dashboard</h2>
-</div>
--->
-{{=LOAD("default", "title_and_breadcrumbs.load", vars={"title":"Dashboard"}, ajax=True, target="title_div_comp")}}
+<div id="index_div">
+{{=LOAD("default", "title_and_breadcrumbs.load", vars={"title":"Dashboard"}, ajax=True, target="title_div")}}
 {{if auth.has_membership('member'):}}
-    {{=LOAD("default", "member_dash.load", ajax=True, target='member_dash_div')}}
+    {{=LOAD("records", "member_dash.load", ajax=True, target='member_dash_div')}}
 {{pass}}
 {{if auth.has_membership('record'):}}
-    {{=LOAD("default", "record_dash_main.load", ajax=True, target="record_dash_main_div")}}
+    {{=LOAD("records", "record_dash_main.load", ajax=True, target="record_dash_main_div")}}
     <br>
-    {{=LOAD("default", "record_dash_users.load", ajax=True, target="record_dash_users_div")}}
+    {{=LOAD("records", "record_dash_users.load", ajax=True, target="record_dash_users_div")}}
 {{pass}}
-
-<!--
-    {{=LOAD("default", "record_dash.load", ajax=True, target='record_dash_div')}}
-    <br>
-    {{=LOAD("default", "record_dash_sr.load", ajax=True, target='record_dash_sr_div')}}
--->
+</div>
