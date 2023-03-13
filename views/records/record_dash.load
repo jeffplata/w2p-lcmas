@@ -6,7 +6,7 @@
     <h4>
         Member information change requests
     </h4>
-    {{if grid.view_form:}}
+    {{if request.args(0)=='view':}}
         {{=form}}
     {{else:}}
         {{=grid}}

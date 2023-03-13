@@ -30,9 +30,11 @@ def record_dash_users():
 
 @auth.requires_login()
 def record_dash():
+    # list member info update requests
     link1 = dict(header='', body=lambda r: A('View', _class='button btn btn-default btn-secondary', 
         _href=URL('records','record_dash', args=['view', 'member_info_update_request', r.id], user_signature=True), cid=request.cid ))
     d = None
+    q = db.member_info_update_request
     if request.args(0)=='view':
         r = db(db.member_info_update_request.id==request.args(2)).select().first()
         h = db(db.member_info_update_request_hist.request==r.id).select().first()
@@ -100,9 +102,22 @@ def record_dash():
         if not db(db.member_info_update_request_hist.request==r.id).select():
             db.member_info_update_request_hist.insert(**h)
         r.update_record(status='approved')
+    elif request.args(0)=='filter_pending':
+        session.pending_requests_only = True
+    elif request.args(0)=='filter_all':
+        session.pending_requests_only = False
 
-    grid = SQLFORM.grid(db.member_info_update_request, orderby=~db.member_info_update_request.id,
-        create=False, formname='grid_mem', deletable=False, csv=False, links=[link1])
+    if session.pending_requests_only:
+        q = db(db.member_info_update_request.status=='pending')
+        btn_val = "All requests"
+        filter_args = "filter_all"
+    else:
+        btn_val = "Pending requests only"
+        filter_args = "filter_pending"
+    grid = SQLFORM.grid(q, orderby=~db.member_info_update_request.id,
+        create=False, formname='grid_mem', deletable=False, csv=False, links=[link1], details=False, editable=False)
+    grid[0].insert(2, SPAN(' | ' ) + A(btn_val, _href=URL("records","record_dash", args=filter_args, user_signature=True), 
+        _id="filter_button",_class="btn btn-secondary", _style="margin-top: 7px; line-height:20px", cid=request.cid))
     return dict(grid=grid, form=d)
 
 @auth.requires_login()

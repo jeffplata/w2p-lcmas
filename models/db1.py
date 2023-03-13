@@ -93,7 +93,7 @@ db.define_table("member_info_update_request",
     Field('status', length=11, default='pending', requires=IS_IN_SET(['pending', 'approved','disapproved']), 
         represent = lambda v, r : DIV('pending', _class='bg-warning') if v=='pending' else v),
     auth.signature,
-
+    # Field('display_seq', compute=lambda r: 0 if r['status']=='pending' else 1)
     )
 
 db.define_table("member_info_update_request_hist",
