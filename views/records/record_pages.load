@@ -1,10 +1,10 @@
 {{if page=="change_request":}}
     {{=LOAD("default", "title_and_breadcrumbs.load", vars={"title":"","breadcrumbs":"Dashboard=index;Member information change request="}, ajax=True, target="title_div_comp")}}
-    {{=LOAD("records", "record_dash.load", ajax=True, target="main_div_comp")}}
+    {{=LOAD("records", "record_change_request.load", ajax=True, target="main_div_comp")}}
 {{elif page=="change_sr_request":}}
     {{=LOAD("default", "title_and_breadcrumbs.load", vars={"title":"","breadcrumbs":"Dashboard=index;Member service record change request="}, ajax=True, target="title_div_comp")}}
-    {{=LOAD("records", "record_dash_sr.load", ajax=True, target="main_div_comp")}}
+    {{=LOAD("records", "record_change_sr_request.load", ajax=True, target="main_div_comp")}}
 {{elif page=="user_list":}}
     {{=LOAD("default", "title_and_breadcrumbs.load", vars={"title":"","breadcrumbs":"Dashboard=index;User list="}, ajax=True, target="title_div_comp")}}
-    {{=LOAD("records", "record_dash_users.load", ajax=True, target="main_div_comp")}}
+    {{=LOAD("records", "record_users.load", ajax=True, target="main_div_comp")}}
 {{pass}}

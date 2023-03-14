@@ -1,0 +1,14 @@
+<div class="border rounded p-3">
+    <h4>
+        Member information change requests
+    </h4>
+    {{if request.args(0)=='view':}}
+        {{=form}}
+    {{else:}}
+        {{=grid}}
+    {{pass}}
+</div> 
+
+<script>
+    jQuery('.button').closest('td').attr('class', 'row_buttons');
+</script>

@@ -3,11 +3,11 @@
 <div id="index_div">
 {{=LOAD("default", "title_and_breadcrumbs.load", vars={"title":"Dashboard"}, ajax=True, target="title_div")}}
 {{if auth.has_membership('member'):}}
-    {{=LOAD("records", "member_dash.load", ajax=True, target='member_dash_div')}}
+    {{=LOAD("default", "member_dash.load", ajax=True, target='member_dash_div')}}
 {{pass}}
 {{if auth.has_membership('record'):}}
-    {{=LOAD("records", "record_dash_main.load", ajax=True, target="record_dash_main_div")}}
+    {{=LOAD("records", "record_dash_cards.load", ajax=True, target="record_dash_cards_div")}}
     <br>
-    {{=LOAD("records", "record_dash_users.load", ajax=True, target="record_dash_users_div")}}
+    {{=LOAD("records", "record_users.load", ajax=True, target="record_users_div")}}
 {{pass}}
 </div>

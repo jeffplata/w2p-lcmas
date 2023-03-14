@@ -69,7 +69,8 @@ db.define_table('service_record',
     Field('department_id', 'reference department', label='Department'),
     Field('mem_position', length=50, label='Position'),
     Field('salary', 'decimal(15,2)', represent=lambda v, r: '{:,}'.format(v) if v is not None else ''),
-    Field('status', length=11, default='pending', requires=IS_IN_SET(['pending', 'approved', 'disapproved', 'system'])),
+    Field('status', length=11, default='pending', requires=IS_IN_SET(['pending', 'approved', 'disapproved', 'system']),
+        represent = lambda v, r : DIV('pending', _class='bg-warning') if v=='pending' else v),
     auth.signature,
     )
 

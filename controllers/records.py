@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 # try something like
 _btn_back = A(SPAN(_class="icon arrowleft icon-arrow-left glyphicon glyphicon-arrow-left"),
-    ' Back', _href=URL('record_dash'), cid=request.cid, _class='btn btn-secondary')
+    ' Back', _href=URL('record_change_request'), cid=request.cid, _class='btn btn-secondary')
 _btn_approve = A(SPAN('Approve', _class='font-weight-bold'), 
-                _href=URL('record_dash', args=['approve', request.args(1), request.args(2)], user_signature=True), 
+                _href=URL('record_change_request', args=['approve', request.args(1), request.args(2)], user_signature=True), 
                 _class='btn btn-secondary', cid=request.cid )
 _btn_disapprove =  A('Disapprove', _href='#', _class='btn', cid=request.cid)
 
-def record_member_update():
+def record_pages():
     return dict(page=request.args(0))
 
 @auth.requires_login()
-def record_dash_main():
+def record_dash_cards():
     pending_requests = db(db.member_info_update_request.status=='pending').count()
     total_requests = db(db.member_info_update_request).count()
     pending_sr_requests = db(db.service_record.status=='pending').count()
@@ -22,17 +22,17 @@ def record_dash_main():
     return locals()
 
 @auth.requires_login()
-def record_dash_users():
+def record_users():
     grid = SQLFORM.grid(db.auth_user, fields=[db.auth_user.first_name, db.auth_user.last_name, db.auth_user.middle_name,
         db.auth_user.employee_no, db.auth_user.email], orderby=[db.auth_user.last_name|db.auth_user.first_name],
         create=True, formname='grid_user', deletable=False, csv=False)
     return locals()
 
 @auth.requires_login()
-def record_dash():
+def record_change_request():
     # list member info update requests
     link1 = dict(header='', body=lambda r: A('View', _class='button btn btn-default btn-secondary', 
-        _href=URL('records','record_dash', args=['view', 'member_info_update_request', r.id], user_signature=True), cid=request.cid ))
+        _href=URL('records','record_change_request', args=['view', 'member_info_update_request', r.id], user_signature=True), cid=request.cid ))
     d = None
     q = db.member_info_update_request
     if request.args(0)=='view':
@@ -116,12 +116,59 @@ def record_dash():
         filter_args = "filter_pending"
     grid = SQLFORM.grid(q, orderby=~db.member_info_update_request.id,
         create=False, formname='grid_mem', deletable=False, csv=False, links=[link1], details=False, editable=False)
-    grid[0].insert(2, SPAN(' | ' ) + A(btn_val, _href=URL("records","record_dash", args=filter_args, user_signature=True), 
+    grid[0].insert(2, SPAN(' | ' ) + A(btn_val, _href=URL("records","record_change_request", args=filter_args, user_signature=True), 
         _id="filter_button",_class="btn btn-secondary", _style="margin-top: 7px; line-height:20px", cid=request.cid))
     return dict(grid=grid, form=d)
 
 @auth.requires_login()
-def record_dash_sr():
-    q = db.service_record.status=='pending'
-    grid_sr = SQLFORM.grid(q, create=False, formname='grid_sr', deletable=False, csv=False, advanced_search=False)
-    return locals()
+def record_change_sr_request():
+    _btn_back = A(SPAN(_class="icon arrowleft icon-arrow-left glyphicon glyphicon-arrow-left"),
+        ' Back', _href=URL('record_change_sr_request'), cid=request.cid, _class='btn btn-secondary')
+    _btn_approve = A(SPAN('Approve', _class='font-weight-bold'), 
+                    _href=URL('record_change_sr_request', args=['approve', request.args(1), request.args(2)], user_signature=True), 
+                    _class='btn btn-secondary', cid=request.cid )
+    _btn_disapprove =  A('Disapprove', _href='#', _class='btn', cid=request.cid)
+    link1 = dict(header='', body=lambda r: A('View', _class='btn btn-secondary', 
+        _href=URL('records','record_change_sr_request', args=['view', 'service_record', r.id], user_signature=True), cid=request.cid ))
+
+    form = None
+    if request.args(0)=='view':
+        sr_dep = db(db.service_record.id==request.args(2)).select(join=db.department.on(db.department.id==db.service_record.department_id)).first()
+        p_id = db(db.service_record.status!='pending').select().first()['id']
+        prev_sr_dep = db(db.service_record.id==p_id).select(join=db.department.on(db.department.id==db.service_record.department_id)).first()
+
+        t = TABLE(_class='table table-striped table-responsive')
+        t.append(THEAD(TR(['', 'Last SR values', 'New Values']), _style="font-weight:700"))
+        # flds =  "date_effective;department_id;mem_position;salary;status"
+        # flbls = "Date Effective;Department;Position;Salary;Status"
+        # for fld, lbl in zip(flds.split(';'), flbls.split(';')):
+        #     t.append(TR(lbl, sr_dep[fld] if '.' in fld else sr_dep['service_record.'+fld]))
+            # "{:,.2f}".format(r.salary)
+
+        t.append(TR('Date Effective', prev_sr_dep.service_record.date_effective, sr_dep.service_record.date_effective))
+        t.append(TR('Department', prev_sr_dep.department.name, sr_dep.department.name))
+        t.append(TR('Position', prev_sr_dep.service_record.mem_position, sr_dep.service_record.mem_position))
+        t.append(TR('Salary', "{:,.2f}".format(prev_sr_dep.service_record.salary), "{:,.2f}".format(sr_dep.service_record.salary)))
+
+        sr = sr_dep.service_record
+        if sr.status=='pending':
+            btns = _btn_approve, _btn_disapprove
+            info = ''
+        else:
+            btns = ''
+            mes = ''
+            mb = db.auth_user(sr.modified_by)
+            if mb: 
+                mes = '%s by %s' % (sr.modified_on.strftime('%m/%d/%Y'), mb.first_name + ' ' + mb.last_name)
+            info = DIV(SPAN(' Approved ', _class='text-success') if sr.status=='approved' else SPAN(' Disapproved ', _class='text-danger'), 
+                mes, _class='border border-info rounded p-3')
+
+        d = DIV(_btn_back, *btns if sr.status=='pending' else '', _class='row_buttons')
+        d = DIV(d, info, _class='web2py_grid' )
+        d = DIV(d, t)
+
+        form = d
+
+    q = db.service_record
+    grid = SQLFORM.grid(q, create=False, formname='grid_sr', deletable=False, csv=False, advanced_search=False, links=[link1])
+    return dict(grid=grid, form=form)
