@@ -128,27 +128,35 @@ def record_change_sr_request():
                     _href=URL('record_change_sr_request', args=['approve', request.args(1), request.args(2)], user_signature=True), 
                     _class='btn btn-secondary', cid=request.cid )
     _btn_disapprove =  A('Disapprove', _href='#', _class='btn', cid=request.cid)
-    link1 = dict(header='', body=lambda r: A('View', _class='btn btn-secondary', 
+    link1 = dict(header='', body=lambda r: A('View', _class='button btn btn-default btn-secondary', 
         _href=URL('records','record_change_sr_request', args=['view', 'service_record', r.id], user_signature=True), cid=request.cid ))
 
     form = None
     if request.args(0)=='view':
-        sr_dep = db(db.service_record.id==request.args(2)).select(join=db.department.on(db.department.id==db.service_record.department_id)).first()
-        p_id = db(db.service_record.status!='pending').select().first()['id']
-        prev_sr_dep = db(db.service_record.id==p_id).select(join=db.department.on(db.department.id==db.service_record.department_id)).first()
+        this_id = request.args(2)
+        sr_dep = db(db.service_record.id==this_id).select(join=db.department.on(db.department.id==db.service_record.department_id)).first()
+        p_id = db((db.service_record.status!='pending') & (db.service_record.id!=this_id)).select().first()
+        member = db.auth_user(sr_dep.service_record.user_id)
+        if p_id:
+            p_id = p_id['id']
+            prev_sr_dep = db(db.service_record.id==p_id).select(join=db.department.on(db.department.id==db.service_record.department_id)).first()
+            prev_sr_dep = [prev_sr_dep.service_record.date_effective, prev_sr_dep.department.name, prev_sr_dep.service_record.mem_position, 
+                           prev_sr_dep.service_record.salary]
+            bg = [prev_sr_dep[0] != sr_dep.service_record.date_effective,
+                  prev_sr_dep[1] != sr_dep.department.name,
+                  prev_sr_dep[2] != sr_dep.service_record.mem_position,
+                  prev_sr_dep[3] != sr_dep.service_record.salary]
+        else:
+            prev_sr_dep = ['','','',0]
+            bg = [False]*4
 
+        bgc = 'bg-info text-white'
         t = TABLE(_class='table table-striped table-responsive')
-        t.append(THEAD(TR(['', 'Last SR values', 'New Values']), _style="font-weight:700"))
-        # flds =  "date_effective;department_id;mem_position;salary;status"
-        # flbls = "Date Effective;Department;Position;Salary;Status"
-        # for fld, lbl in zip(flds.split(';'), flbls.split(';')):
-        #     t.append(TR(lbl, sr_dep[fld] if '.' in fld else sr_dep['service_record.'+fld]))
-            # "{:,.2f}".format(r.salary)
-
-        t.append(TR('Date Effective', prev_sr_dep.service_record.date_effective, sr_dep.service_record.date_effective))
-        t.append(TR('Department', prev_sr_dep.department.name, sr_dep.department.name))
-        t.append(TR('Position', prev_sr_dep.service_record.mem_position, sr_dep.service_record.mem_position))
-        t.append(TR('Salary', "{:,.2f}".format(prev_sr_dep.service_record.salary), "{:,.2f}".format(sr_dep.service_record.salary)))
+        t.append(THEAD(TR(['', 'Last SR Values', 'New Values']), _style="font-weight:700"))
+        t.append(TR(B('Date Effective'), prev_sr_dep[0], TD(sr_dep.service_record.date_effective, _class=bgc if bg[0] else '')))
+        t.append(TR(B('Department'), prev_sr_dep[1], TD(sr_dep.department.name, _class=bgc if bg[1] else '')))
+        t.append(TR(B('Position'), prev_sr_dep[2], TD(sr_dep.service_record.mem_position, _class=bgc if bg[2] else '')))
+        t.append(TR(B('Salary'), "{:,.2f}".format(prev_sr_dep[3]), TD("{:,.2f}".format(sr_dep.service_record.salary), _class=bgc if bg[3] else '')))
 
         sr = sr_dep.service_record
         if sr.status=='pending':
@@ -165,10 +173,33 @@ def record_change_sr_request():
 
         d = DIV(_btn_back, *btns if sr.status=='pending' else '', _class='row_buttons')
         d = DIV(d, info, _class='web2py_grid' )
-        d = DIV(d, t)
+        d = DIV(d, DIV(B('Member: '), member.first_name+' '+member.last_name, _class='p-2', _style='background: #eaeaea'), t)
 
         form = d
 
-    q = db.service_record
-    grid = SQLFORM.grid(q, create=False, formname='grid_sr', deletable=False, csv=False, advanced_search=False, links=[link1])
+    elif request.args(0)=='approve':
+        r = db.service_record(request.args(2)) or HTTP(400)
+        r.update_record(status='approved')
+
+    elif request.args(0)=='filter_pending':
+        session.pending_sr_requests_only = True
+
+    elif request.args(0)=='filter_all':
+        session.pending_sr_requests_only = False
+
+    q = None
+    if session.pending_sr_requests_only:
+        q = db(db.service_record.status=='pending')
+        btn_val = "All requests"
+        filter_args = "filter_all"
+    else:
+        q = db.service_record
+        btn_val = "Pending requests only"
+        filter_args = "filter_pending"
+
+    grid = SQLFORM.grid(q, create=False, formname='grid_sr', deletable=False, csv=False, editable=False, details=False, links=[link1],
+        orderby=~db.service_record.id)
+    grid[0].insert(2, SPAN(' | ' ) + A(btn_val, _href=URL("records","record_change_sr_request", args=filter_args, user_signature=True), 
+        _id="filter_button",_class="btn btn-secondary", _style="margin-top: 7px; line-height:20px", cid=request.cid))
+
     return dict(grid=grid, form=form)
