@@ -3,12 +3,25 @@
         Member information change requests
     </h4>
     {{if request.args(0)=='view':}}
+        {{=buttons}}
         {{=form}}
+        {{=table}}
     {{else:}}
         {{=grid}}
     {{pass}}
 </div> 
 
 <script>
+    // jQuery('.button').closest('td').attr('class', 'row_buttons');
+    {{=ASSIGNJS(hasErrors=has_errors)}}
+    jQuery(document).ready(function(){
+        if (hasErrors=='False'){
+            jQuery("[name='da_form']").hide();
+            }
+    });
     jQuery('.button').closest('td').attr('class', 'row_buttons');
+    jQuery("[name='disapprove_btn']").click(function(){
+        jQuery("[name='da_form']").show();
+        jQuery("[name='reason']").focus();
+        });
 </script>

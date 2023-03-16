@@ -71,6 +71,7 @@ db.define_table('service_record',
     Field('salary', 'decimal(15,2)', represent=lambda v, r: '{:,}'.format(v) if v is not None else ''),
     Field('status', length=11, default='pending', requires=IS_IN_SET(['pending', 'approved', 'disapproved', 'system']),
         represent = lambda v, r : DIV('pending', _class='bg-warning') if v=='pending' else v),
+    Field('reason', length=128, readable=False),
     auth.signature,
     )
 
@@ -93,8 +94,8 @@ db.define_table("member_info_update_request",
     Field("date_submitted", "date", default=datetime.today, requires=mdy_date),
     Field('status', length=11, default='pending', requires=IS_IN_SET(['pending', 'approved','disapproved']), 
         represent = lambda v, r : DIV('pending', _class='bg-warning') if v=='pending' else v),
+    Field('reason', length=128, readable=False),
     auth.signature,
-    # Field('display_seq', compute=lambda r: 0 if r['status']=='pending' else 1)
     )
 
 db.define_table("member_info_update_request_hist",
