@@ -21,6 +21,12 @@ def record_users():
         create=True, formname='grid_user', deletable=False, csv=False)
     return locals()
 
+
+# record_change_request/view
+# record_change_request/approve
+# record_change_request/disapprove
+# record_change_request/filter_pending
+# record_change_request/filter_all
 @auth.requires_login()
 def record_change_request():
     # list member info update requests
@@ -34,27 +40,31 @@ def record_change_request():
         _href=URL('records','record_change_request', args=['view', 'member_info_update_request', r.id], user_signature=True), cid=request.cid ))
 
     d = None
-    q = db.member_info_update_request
     table = None
     if request.args(0)=='view':
+        # status = 'pending'
+        # status = 'approved'
+        # status = 'disapproved'
+
+        # r = this request, h =  history of change requests
         r = db(db.member_info_update_request.id==request.args(2)).select().first()
-        h = db(db.member_info_update_request_hist.request==r.id).select().first()
-#todo: continue changing 
+
         if r.status=='pending':
-            s = "margin: 0px 5px 3px 0px;"
-            btns = _btn_approve, _btn_disapprove
-            da_form = FORM(LABEL("Reason for disapproval:", _style=s), INPUT(_name="reason", requires=IS_NOT_EMPTY(), _class="form-control", _style=s+"width: 20em"), INPUT(_type="submit", _value="Submit", _style=s), BR(), _name="da_form", method='GET', _class="form-inline", _style="margin: 5px 0px")
-        else:
-            if r.status=='approved':
-                if not h:
-                    h = {}
-                    f = 'first_name;last_name;middle_name;employee_no;birth_date;gender;civil_status;date_membership;entrance_to_duty'
-                    for i in f.split(';'):
-                        h[i] = 'no record'
-                m = p = h
-            else: #pending
-                m = db.auth_user(r.user_id)
-                p = db.member_info(db.member_info.user_id==r.user_id)
+            # compare (r)request with current (m)member information
+            # m = member info, p = corresponding member profile
+            m = db.auth_user(r.user_id)
+            p = db.member_info(db.member_info.user_id==r.user_id)
+        else:  # approved / disapproved
+            # compare (r)request with (h)request history
+            h = db(db.member_info_update_request_hist.request==r.id).select().first()
+            if not h:
+                h = {}
+                f = 'first_name;last_name;middle_name;employee_no;birth_date;gender;civil_status;date_membership;entrance_to_duty'
+                for i in f.split(';'):
+                    h[i] = 'no record'
+            m = p = h
+
+        # set up table of values
         f = 'first_name;last_name;middle_name;employee_no' 
         t = TABLE(_class='table table-striped table-responsive')
         t.append(THEAD(TR(['', 'Original', 'New Value']), _style="font-weight:600"))
@@ -66,28 +76,48 @@ def record_change_request():
             for i in f.split(';'):
                 bg = 'bg-info text-white' if (p[i] != r[i]) else ''
                 t.append(TR(TD(i.capitalize().replace('_',' '), _class='font-weight-bold'), p[i], TD(r[i], _class=bg)))
-        if r.status=='pending': 
-            btns = _btn_approve, _btn_disapprove
-            info = ''
-        else: 
-            btns = ''
-            mb = db.auth_user(r.modified_by)
-            mes = ''
-            if mb: 
-                mes = '%s by %s' % (r.modified_on.strftime('%m/%d/%Y'), mb.first_name + ' ' + mb.last_name)
-            info = DIV(SPAN(' Approved ', _class='text-success') if r.status=='approved' else SPAN(' Disapproved ', _class='text-danger'), 
-                mes, _class='border border-info rounded p-3') 
 
-        d = DIV(DIV(_btn_back, *btns if r.status=='pending' else '', _class='row_buttons'), _class="web2py_grid")
-        buttons = d
-        d = DIV(DIV(info), t)
-        table = d
+        # set up buttons, info and da-form
+        btns = ''
+        info = ''
+        da_form = ''
+        if r.status=='pending':
+            btns = _btn_approve, _btn_disapprove
+            s = "margin: 0px 5px 3px 0px;"
+            da_form = FORM(LABEL("Reason for disapproval:", _style=s), INPUT(_name="reason", requires=IS_NOT_EMPTY(), _class="form-control", _style=s+"width: 20em"), INPUT(_type="submit", _value="Submit", _style=s), BR(), _name="da_form", method='GET', _class="form-inline", _style="margin: 5px 0px")
+        else:
+            if r.status=='approved': 
+                info = SPAN(' Approved ', _class='text-success')
+            elif r.status=='disapproved': 
+                info = SPAN(' Disapproved ', _class='text-danger')
+
+            # todo: include reason for disapproval
+            mb = db.auth_user(r.modified_by)
+            mes = '%s by %s. %s' % (r.modified_on.strftime('%m/%d/%Y'), mb.first_name + ' ' + mb.last_name, 'Reason: '+r.reason if r.status=='disapproved' else '') if mb else ''
+            info = DIV(info, mes, _class='border border-info rounded p-3') 
+
+        buttons = DIV(DIV(_btn_back, *btns, _class='row_buttons'), _class="web2py_grid")
+        table = DIV(info, t)
+        form = da_form
+        
+        has_errors = 'False'
+        if form:
+            if form.process().accepted:
+                session.flash = ''
+                session.disapprove_reason = form.vars['reason']
+                redirect(URL('record_change_request', args=['disapprove', request.args(1), request.args(2) ], user_signature=True))
+            elif form.errors:
+                has_errors = 'True'
+            else:
+                session.flash=''
 
         return dict(table=table, form=form, buttons=buttons, has_errors=has_errors)
 
     elif request.args(0)=='approve':
         h = {}
-        r = db(db.member_info_update_request.id==request.args(2)).select().first()
+        # r = db(db.member_info_update_request.id==request.args(2)).select().first() or HTTP(400)
+        # todo: how to reaise http 400
+        r = db.member_info_update_request(request.args(2)) or HTTP(400)
         m = db.auth_user(r.user_id)
         p = db.member_info(db.member_info.user_id==r.user_id)
         f = 'first_name;last_name;middle_name;employee_no'
@@ -111,7 +141,13 @@ def record_change_request():
             if changed: p.update_record()
         if not db(db.member_info_update_request_hist.request==r.id).select():
             db.member_info_update_request_hist.insert(**h)
-        r.update_record(status='approved')
+        r.update_record(status='approved', reason='')
+
+    elif request.args(0)=='disapprove':
+        r = db.member_info_update_request(request.args(2)) or HTTP(400)
+        r.update_record(status='disapproved', reason=session.disapprove_reason)
+        del session.disapprove_reason
+
     elif request.args(0)=='filter_pending':
         session.pending_requests_only = True
     elif request.args(0)=='filter_all':
@@ -122,13 +158,17 @@ def record_change_request():
         btn_val = "All requests"
         filter_args = "filter_all"
     else:
+        q = db.member_info_update_request
         btn_val = "Pending requests only"
         filter_args = "filter_pending"
+
+    response.flash = ''
     grid = SQLFORM.grid(q, orderby=~db.member_info_update_request.id,
         create=False, formname='grid_mem', deletable=False, csv=False, links=[link1], details=False, editable=False)
     grid[0].insert(2, SPAN(' | ' ) + A(btn_val, _href=URL("records","record_change_request", args=filter_args, user_signature=True), 
         _id="filter_button",_class="btn btn-secondary", _style="margin-top: 7px; line-height:20px", cid=request.cid))
-    return dict(grid=grid, form=d, has_errors='False')
+    return dict(grid=grid, has_errors='False')
+
 
 @auth.requires_login()
 def record_change_sr_request():
@@ -149,7 +189,7 @@ def record_change_sr_request():
         p_id = db((db.service_record.status!='pending') & (db.service_record.id!=this_id)).select().first()
         member = db.auth_user(sr_dep.service_record.user_id)
         if p_id:
-            p_id = p_id['id']
+            p_id = p_id['id'] # id of latest sr for this member
             prev_sr_dep = db(db.service_record.id==p_id).select(join=db.department.on(db.department.id==db.service_record.department_id)).first()
             prev_sr_dep = [prev_sr_dep.service_record.date_effective, prev_sr_dep.department.name, prev_sr_dep.service_record.mem_position, 
                            prev_sr_dep.service_record.salary]
@@ -191,19 +231,16 @@ def record_change_sr_request():
                 mes = '%s by %s. %s' % (sr.modified_on.strftime('%m/%d/%Y'), mb.first_name + ' ' + mb.last_name, 'Reason: '+sr.reason if sr.status=='disapproved' else '')
             info = DIV(info, mes, _class='border border-info rounded p-3')
 
-        d = DIV(DIV(_btn_back, *btns if sr.status=='pending' else '', _class='row_buttons'), _class="web2py_grid")
-        buttons = d
-        # d = DIV(info, _class='web2py_grid' )
-        d = DIV(DIV(info), DIV(B('Member: '), member.first_name+' '+member.last_name, _class='p-2', _style='background: #eaeaea'), t)
+        buttons = DIV(DIV(_btn_back, *btns, _class='row_buttons'), _class="web2py_grid")
+        table = DIV(DIV(info), DIV(B('Member: '), member.first_name+' '+member.last_name, _class='p-2', _style='background: #eaeaea'), t)
 
-        table = d
         form = da_form
 
         has_errors = 'False'
         if form:
             if form.process().accepted:
                 session.flash=''
-                session.disapprove_reason = form.vars['reason']
+                session.disapprove_sr_reason = form.vars['reason']
                 redirect(URL('record_change_sr_request', args=['disapprove', request.args(1), request.args(2) ], user_signature=True))
             elif form.errors:
                 has_errors = 'True'
@@ -218,8 +255,8 @@ def record_change_sr_request():
 
     elif request.args(0)=='disapprove':
         r = db.service_record(request.args(2)) or HTTP(400)
-        r.update_record(status='disapproved', reason=session.disapprove_reason)
-        del session.disapprove_reason
+        r.update_record(status='disapproved', reason=session.disapprove_sr_reason)
+        del session.disapprove_sr_reason
 
     elif request.args(0)=='filter_pending':
         session.pending_sr_requests_only = True
