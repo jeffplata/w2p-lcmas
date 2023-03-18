@@ -14,12 +14,53 @@ def record_dash_cards():
     total_non_members = db(db.auth_user).count() - total_members
     return locals()
 
+# users/view
+# users/update
 @auth.requires_login()
 def record_users():
-    grid = SQLFORM.grid(db.auth_user, fields=[db.auth_user.first_name, db.auth_user.last_name, db.auth_user.middle_name,
-        db.auth_user.employee_no, db.auth_user.email], orderby=[db.auth_user.last_name|db.auth_user.first_name],
+    # args(0) = action
+    # args(1) = table
+    # args(2) = id
+    # fields = 'first_name;last_name;middle_name;employee_no;email'
+
+    _btn_back = A(SPAN(_class="icon arrowleft icon-arrow-left glyphicon glyphicon-arrow-left"),
+        ' Back', _href=URL('record_users'), cid=request.cid, _class='btn btn-secondary')
+    fields = [db.auth_user.first_name, db.auth_user.last_name, db.auth_user.middle_name,
+        db.auth_user.employee_no, db.auth_user.email]
+    form = None
+    if request.args(0)=='view':
+        user = db.auth_user(request.args(2))
+        if user:
+            for f in fields:
+                f.default = user[f.name]
+            profile = db.member_info(db.member_info.user_id==user.id)
+            if profile:
+                pfields = [db.member_info.birth_date, db.member_info.gender, db.member_info.civil_status, db.member_info.date_membership, db.member_info.entrance_to_duty]
+                for f in pfields:
+                    f.default = profile[f.name]
+                fields += pfields
+            old_values ={}
+            for f in fields:
+                f[f.name] = f.default
+            form = SQLFORM.factory(*fields, readonly=False)
+            form = DIV(DIV(_btn_back, _class='row_buttons'), form, _class="web2py_grid")
+
+            if form.process().accepted:
+                change_detected = False
+                for f in fields:
+                    if old_values[f.name] != form.vars[f.name]:
+                        change_detected = True
+                        break
+                if change_detected:
+                    # todo: continue here
+        else:
+            HTTP(400)
+        pass
+    elif request.args(0)=='update':
+        pass
+    grid = SQLFORM.grid(db.auth_user, fields=fields, orderby=[db.auth_user.last_name|db.auth_user.first_name],
         create=True, formname='grid_user', deletable=False, csv=False)
-    return locals()
+    return dict(grid=grid, form=form)
 
 
 # record_change_request/view
@@ -103,13 +144,11 @@ def record_change_request():
         has_errors = 'False'
         if form:
             if form.process().accepted:
-                session.flash = ''
                 session.disapprove_reason = form.vars['reason']
                 redirect(URL('record_change_request', args=['disapprove', request.args(1), request.args(2) ], user_signature=True))
             elif form.errors:
                 has_errors = 'True'
-            else:
-                session.flash=''
+                response.flash = ''
 
         return dict(table=table, form=form, buttons=buttons, has_errors=has_errors)
 
@@ -239,13 +278,11 @@ def record_change_sr_request():
         has_errors = 'False'
         if form:
             if form.process().accepted:
-                session.flash=''
                 session.disapprove_sr_reason = form.vars['reason']
                 redirect(URL('record_change_sr_request', args=['disapprove', request.args(1), request.args(2) ], user_signature=True))
             elif form.errors:
                 has_errors = 'True'
-            else:
-                session.flash=''
+                response.flash = '' # no need for flash messages, error hint is enough
 
         return dict(table=table, form=form, buttons=buttons, has_errors=has_errors)
 
