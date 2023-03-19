@@ -21,46 +21,108 @@ def record_users():
     # args(0) = action
     # args(1) = table
     # args(2) = id
-    # fields = 'first_name;last_name;middle_name;employee_no;email'
 
     _btn_back = A(SPAN(_class="icon arrowleft icon-arrow-left glyphicon glyphicon-arrow-left"),
         ' Back', _href=URL('record_users'), cid=request.cid, _class='btn btn-secondary')
-    fields = [db.auth_user.first_name, db.auth_user.last_name, db.auth_user.middle_name,
+    fields = fld_user = [db.auth_user.first_name, db.auth_user.last_name, db.auth_user.middle_name,
         db.auth_user.employee_no, db.auth_user.email]
-    form = None
-    if request.args(0)=='view':
+    fld_profile = [db.member_info.birth_date, db.member_info.gender, db.member_info.civil_status, db.member_info.date_membership, db.member_info.entrance_to_duty]
+    if request.args(0)=='edit':
+        title = 'Edit user %s' % request.args(2)
         user = db.auth_user(request.args(2))
         if user:
-            for f in fields:
+            for f in fld_user:
                 f.default = user[f.name]
             profile = db.member_info(db.member_info.user_id==user.id)
             if profile:
-                pfields = [db.member_info.birth_date, db.member_info.gender, db.member_info.civil_status, db.member_info.date_membership, db.member_info.entrance_to_duty]
-                for f in pfields:
+                for f in fld_profile:
                     f.default = profile[f.name]
-                fields += pfields
-            old_values ={}
+                fields += fld_profile
+
+            old_values = {}
             for f in fields:
-                f[f.name] = f.default
+                old_values[f.name] = f.default
+
+            emails = db(db.auth_user.email != user.email)
+            db.auth_user.email.requires = IS_NOT_IN_DB(emails, 'auth_user.email')
+            employee_nos = db(db.auth_user.employee_no != user.employee_no)
+            db.auth_user.employee_no.requires = IS_EMPTY_OR(IS_NOT_IN_DB(employee_nos, 'auth_user.employee_no'))
+            # todo: additional check - ensure members get employee number
+
             form = SQLFORM.factory(*fields, readonly=False)
-            form = DIV(DIV(_btn_back, _class='row_buttons'), form, _class="web2py_grid")
+            # form.insert(0, DIV(DIV(_btn_back, _class='row_buttons'), _class="web2py_grid") )
+            form.element('#submit_record__row')[1].insert(1, _btn_back)
 
             if form.process().accepted:
                 change_detected = False
-                for f in fields:
+                for f in fld_user:
                     if old_values[f.name] != form.vars[f.name]:
                         change_detected = True
                         break
                 if change_detected:
-                    # todo: continue here
+                    user.update_record(**db.auth_user._filter_fields(form.vars))
+                if profile:
+                    change_detected = False
+                    for f in fld_profile+[db.member_info.employee_no]:
+                        if old_values[f.name] != form.vars[f.name]:
+                            change_detected = True
+                            break
+                    if change_detected:
+                        profile.update_record(**db.member_info._filter_fields(form.vars))
+                # todo: log changes to member_info_update_request
+                # todo: let member view change history in profile
+                redirect(URL('records', 'record_users'))
+
+            return dict(form=form, title=title)
+
         else:
             HTTP(400)
-        pass
-    elif request.args(0)=='update':
-        pass
-    grid = SQLFORM.grid(db.auth_user, fields=fields, orderby=[db.auth_user.last_name|db.auth_user.first_name],
-        create=True, formname='grid_user', deletable=False, csv=False)
-    return dict(grid=grid, form=form)
+    elif request.args(0)=='new_user':
+        title = 'New user'
+        fields += [db.auth_user.password]
+        db.auth_user.password.readable = False
+        db.auth_user.password.writable = False
+        db.auth_user.password.default = db.auth_user.password.requires[0]('Password1')[0]
+        form = SQLFORM.factory(*fields)
+        form.element('#submit_record__row')[1].insert(1, _btn_back)
+
+        if form.process().accepted:
+            db.auth_user.validate_and_insert(**db.auth_user._filter_fields(form.vars))
+            session.flash = 'New user added.'
+            redirect(URL('records', 'record_users', args=['new_user', request.args(1)], user_signature=True))
+
+        return dict(form=form, title=title)
+
+    elif request.args(0)=='new_member':
+        title = 'New member'
+        allfields = fields + fld_profile + [db.auth_user.password]
+        db.auth_user.password.readable = False
+        db.auth_user.password.writable = False
+        db.auth_user.password.default = db.auth_user.password.requires[0]('Password1')[0]
+        db.auth_user.employee_no.requires = [IS_NOT_EMPTY(), IS_NOT_IN_DB(db, 'auth_user.employee_no')]
+        form = SQLFORM.factory(*allfields)
+        form.element('#submit_record__row')[1].insert(1, _btn_back)
+
+        if form.process().accepted:
+            id = db.auth_user.insert(**db.auth_user._filter_fields(form.vars))
+            form.vars.user_id = id
+            db.member_info.insert(**db.member_info._filter_fields(form.vars))
+            session.flash = 'New member added.'
+            redirect(URL('records', 'record_users', args=['new_member', request.args(1)], user_signature=True))
+
+        return dict(form=form, title=title)
+
+    else:
+        title = 'user list'
+        _btn_add_user = A(SPAN(_class="icon plus icon-plus glyphicon glyphicon-plus"), ' Add user', _href=URL('record_users', args=['new_user', 'auth_user'], user_signature=True), cid=request.cid, _class='btn btn-secondary')
+        _btn_add_member = A(SPAN(_class="icon plus icon-plus glyphicon glyphicon-plus"), ' Add member', _href=URL('record_users', args=['new_member', 'auth_user'], user_signature=True), cid=request.cid, _class='btn btn-secondary')
+
+        grid = SQLFORM.grid(db.auth_user, fields=fields, orderby=[db.auth_user.last_name|db.auth_user.first_name],
+            formname='grid_user', details=False, create=False, deletable=False, csv=False, paginate=10)
+        grid.element('.web2py_console').insert(1, _btn_add_member)
+        grid.element('.web2py_console').insert(1, _btn_add_user)
+
+        return dict(grid=grid, title=title)
 
 
 # record_change_request/view

@@ -1,6 +1,6 @@
 <div class='p-2 m-1 rounded border'>
-    <h4>User list</h4>
-    {{if request.args(0)=='view':}}
+    <h4>{{=title}}</h4>
+    {{if request.args(0) in ['edit', 'new_user', 'new_member']:}}
         {{=form}}
     {{else:}}
         {{=grid}}
