@@ -47,11 +47,14 @@ def record_users():
             db.auth_user.email.requires = IS_NOT_IN_DB(emails, 'auth_user.email')
             employee_nos = db(db.auth_user.employee_no != user.employee_no)
             db.auth_user.employee_no.requires = IS_EMPTY_OR(IS_NOT_IN_DB(employee_nos, 'auth_user.employee_no'))
-            # todo: additional check - ensure members get employee number
+            if db( (db.auth_membership.user_id == user.id) &
+                   (db.auth_membership.group_id == auth.id_group('member')) ).select():
+                db.auth_user.employee_no.requires = IS_NOT_IN_DB(employee_nos, 'auth_user.employee_no')
 
             form = SQLFORM.factory(*fields, readonly=False)
             # form.insert(0, DIV(DIV(_btn_back, _class='row_buttons'), _class="web2py_grid") )
             form.element('#submit_record__row')[1].insert(1, _btn_back)
+            form.element('#no_table_email')['_readonly'] = 'readonly'
 
             if form.process().accepted:
                 change_detected = False
@@ -61,6 +64,16 @@ def record_users():
                         break
                 if change_detected:
                     user.update_record(**db.auth_user._filter_fields(form.vars))
+
+                # log changes to member_info_update_request/_hist
+                id = db.member_info_update_request.insert(**db.member_info_update_request._filter_fields(form.vars))
+                r = db.member_info_update_request(id)
+                r.update_record(user_id=user.id, status='approved')
+                old_values.update({'request':id, 'date_submitted': r.date_submitted})
+                id = db.member_info_update_request_hist.insert(**db.member_info_update_request_hist._filter_fields(old_values))
+                r = db.member_info_update_request_hist(id)
+                r.update_record(user_id=user.id)
+
                 if profile:
                     change_detected = False
                     for f in fld_profile+[db.member_info.employee_no]:
@@ -69,7 +82,6 @@ def record_users():
                             break
                     if change_detected:
                         profile.update_record(**db.member_info._filter_fields(form.vars))
-                # todo: log changes to member_info_update_request
                 # todo: let member view change history in profile
                 redirect(URL('records', 'record_users'))
 
@@ -107,13 +119,15 @@ def record_users():
             id = db.auth_user.insert(**db.auth_user._filter_fields(form.vars))
             form.vars.user_id = id
             db.member_info.insert(**db.member_info._filter_fields(form.vars))
+            group_id = db.auth_group(role='member')['id']
+            db.auth_membership.validate_and_insert(user_id=id, group_id=group_id)
             session.flash = 'New member added.'
             redirect(URL('records', 'record_users', args=['new_member', request.args(1)], user_signature=True))
 
         return dict(form=form, title=title)
 
     else:
-        title = 'user list'
+        title = 'User list'
         _btn_add_user = A(SPAN(_class="icon plus icon-plus glyphicon glyphicon-plus"), ' Add user', _href=URL('record_users', args=['new_user', 'auth_user'], user_signature=True), cid=request.cid, _class='btn btn-secondary')
         _btn_add_member = A(SPAN(_class="icon plus icon-plus glyphicon glyphicon-plus"), ' Add member', _href=URL('record_users', args=['new_member', 'auth_user'], user_signature=True), cid=request.cid, _class='btn btn-secondary')
 
@@ -224,6 +238,7 @@ def record_change_request():
         f = 'first_name;last_name;middle_name;employee_no'
         h['request'] = r.id
         h['user_id'] = r.user_id
+        h['date_submitted'] = r.date_submitted
         changed = False
         for i in f.split(';'):
             h[i] = m[i]
