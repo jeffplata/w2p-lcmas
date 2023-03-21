@@ -2,7 +2,27 @@
     <h4>{{=title}}</h4>
     {{if request.args(0) in ['edit', 'new_user', 'new_member']:}}
         {{=form}}
+    {{elif request.args(0) == 'group':}}
+        <div class="col-lg-6 ">
+            {{=button}}
+            {{=grid}}
+            <hr/>
+            {{=form.custom.begin}}
+            <div class="row web2py_grid p-3 ">
+                <div class="col-lg-1">Group:</div>
+                <div class="col-lg-4">{{=form.custom.widget.group_id}}</div>
+                <div class="col-lg-1">{{=form.custom.submit}}</div>
+            </div>
+            {{=form.custom.end}}
+        </div>
     {{else:}}
         {{=grid}}
     {{pass}}
 </div>
+
+<script>
+    // {{=ASSIGNJS(isGroup = request.args(0) == 'group')}}
+    // if (!isGroup) {
+    //     jQuery('.button').closest('td').attr('class', 'row_buttons');}
+    jQuery('.button').closest('td').attr('class', 'row_buttons');
+</script>

@@ -1,0 +1,45 @@
+<div class="row" style="display: flex; align-items: stretch;">
+    <!--
+    <div class="col-md-4">
+    <div class='p-2 m-1 rounded border border-info'>
+        Member info update requests:
+        <h1><strong><p class="text-center">
+            {{=A(pending_requests, _href=URL("records", "record_pages", args="change_request"), cid="main_div_comp")}}
+        </p></strong></h1>
+        <p class="text-center">pending requests<br> {{=A(total_requests, _href="#")}} total</p>
+    </div>
+    </div>
+
+    <div class="col-md-4">
+    <div class='p-2 m-1 rounded border border-info'>
+        Member service record update requests:
+        <h1><strong><p class="text-center">
+            {{=A(pending_sr_requests, _href=URL("records", "record_pages", args="change_sr_request"), cid="main_div_comp")}}
+        </p></strong></h1>
+        <p class="text-center">pending requests<br> {{=A(total_sr_requests, _href="#")}} total</p>
+    </div>
+    </div>
+
+-->
+<!-- todo: use table for cards in dashboard to make heights uniform -->
+    <div class="col-md-4">
+        <div class='p-2 m-1 rounded border border-info'>
+            Number of members:
+            <h1><strong><p class="text-center">
+                {{=A(total_members, _href=URL("records", "record_pages", args="user_list"), cid="main_div_comp")}}
+            </p></strong></h1>
+            <p class="text-center">{{=A(total_non_members, _href="#")}} non-members<br>&nbsp</p>
+        </div>
+    </div>
+
+    <div class="col-md-4" style="background: #ddd">
+        <div class='p-2 m-1 rounded border border-info'>
+            Users by group:
+            <h1><strong><p class="text-center">
+                
+                <!-- =A(pending_sr_requests, _href=URL("records", "record_pages", args="change_sr_request"), cid="main_div_comp")}} -->
+            </p></strong></h1>
+            <p class="text-center"><br> {{=s}} </p>
+        </div>
+    </div>
+</div>

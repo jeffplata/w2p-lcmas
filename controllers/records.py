@@ -9,13 +9,13 @@ def record_dash_cards():
     total_requests = db(db.member_info_update_request).count()
     pending_sr_requests = db(db.service_record.status=='pending').count()
     total_sr_requests = db(db.service_record.status).count()
-    role_member_id = db(db.auth_group.role=='member').select('id').first().id
-    total_members = len(db(db.auth_membership.group_id==role_member_id).select(groupby=(db.auth_membership.user_id,db.auth_membership.group_id)))
+    total_members = len(db(db.auth_membership.group_id==auth.id_group('member')).select(groupby=(db.auth_membership.user_id,db.auth_membership.group_id)))
     total_non_members = db(db.auth_user).count() - total_members
     return locals()
 
 # users/view
 # users/update
+# users/group
 @auth.requires_login()
 def record_users():
     # args(0) = action
@@ -24,9 +24,11 @@ def record_users():
 
     _btn_back = A(SPAN(_class="icon arrowleft icon-arrow-left glyphicon glyphicon-arrow-left"),
         ' Back', _href=URL('record_users'), cid=request.cid, _class='btn btn-secondary')
+
     fields = fld_user = [db.auth_user.first_name, db.auth_user.last_name, db.auth_user.middle_name,
         db.auth_user.employee_no, db.auth_user.email]
     fld_profile = [db.member_info.birth_date, db.member_info.gender, db.member_info.civil_status, db.member_info.date_membership, db.member_info.entrance_to_duty]
+    
     if request.args(0)=='edit':
         title = 'Edit user %s' % request.args(2)
         user = db.auth_user(request.args(2))
@@ -89,6 +91,7 @@ def record_users():
 
         else:
             HTTP(400)
+
     elif request.args(0)=='new_user':
         title = 'New user'
         fields += [db.auth_user.password]
@@ -126,13 +129,49 @@ def record_users():
 
         return dict(form=form, title=title)
 
+    elif request.args(0) == 'group':
+        user = db.auth_user(request.args(2))
+        title = 'Assign user %s to group' % (user.first_name + ' ' + user.last_name)
+        groups = db( db.auth_membership.user_id == user.id )
+        _link = [ dict(header='', body=lambda r: A('Delete', _class='button btn btn-default btn-secondary', 
+                _href=URL('records','record_users', args=['delete', 'auth_membership', r.id], user_signature=True), cid=request.cid )) ]
+
+        grid = SQLFORM.grid(groups, formname='grid_user_group', details=False, create=False, csv=False, paginate=10, 
+            searchable=False, editable=False, deletable=False, links=_link)
+
+        user_groups = db(db.auth_membership.user_id==user.id).select()
+        ug = [g.group_id for g in user_groups]
+        group_options = db(~db.auth_group.id.belongs(ug))
+        db.auth_membership.group_id.requires = IS_IN_DB(group_options, 'auth_group.id', '%(role)s (%(id)s)', zero=None)
+        form = SQLFORM(db.auth_membership, fields=['group_id'], submit_button='Assign group', formname='form_group_add')
+
+        if form.process(dbio=False).accepted:
+            gid = form.vars['group_id']
+            fv = {'group_id':gid, 'user_id':user.id}
+            db.auth_membership.insert(**fv)
+            redirect(URL('records', 'record_users', args=['group', request.args(1), request.args(2)], user_signature=True))
+
+        return dict(grid=grid, form=form, title=title, button=_btn_back)
+
+    elif request.args(0) == 'delete':
+        if request.args(1) == 'auth_membership':
+            memb_q = db.auth_membership.id==request.args(2)
+            user_id = db(memb_q).select(db.auth_membership.user_id).first().user_id
+            db(memb_q).delete()
+
+            redirect(URL('records', 'record_users', args=['group', request.args(1), user_id], user_signature=True))
+
     else:
         title = 'User list'
         _btn_add_user = A(SPAN(_class="icon plus icon-plus glyphicon glyphicon-plus"), ' Add user', _href=URL('record_users', args=['new_user', 'auth_user'], user_signature=True), cid=request.cid, _class='btn btn-secondary')
         _btn_add_member = A(SPAN(_class="icon plus icon-plus glyphicon glyphicon-plus"), ' Add member', _href=URL('record_users', args=['new_member', 'auth_user'], user_signature=True), cid=request.cid, _class='btn btn-secondary')
+        link1 = None
+        if auth.has_membership('manager'):
+            link1 = [ dict(header='', body=lambda r: A('Group', _class='button btn btn-default btn-secondary', 
+                _href=URL('records','record_users', args=['group', 'auth_user', r.id], user_signature=True), cid=request.cid )) ]
 
         grid = SQLFORM.grid(db.auth_user, fields=fields, orderby=[db.auth_user.last_name|db.auth_user.first_name],
-            formname='grid_user', details=False, create=False, deletable=False, csv=False, paginate=10)
+            formname='grid_user', details=False, create=False, deletable=False, csv=False, paginate=10, links=link1)
         grid.element('.web2py_console').insert(1, _btn_add_member)
         grid.element('.web2py_console').insert(1, _btn_add_user)
 

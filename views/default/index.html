@@ -5,6 +5,11 @@
 {{if auth.has_membership('member'):}}
     {{=LOAD("default", "member_dash.load", ajax=True, target='member_dash_div')}}
 {{pass}}
+{{if auth.has_membership('manager'):}}
+    {{=LOAD('manager', 'dashboard.load', ajax=True, target='manager_dashboard_div')}}
+    <br>
+    {{=LOAD("records", "record_users.load", ajax=True, target="record_users_div")}}
+{{pass}}
 {{if auth.has_membership('record'):}}
     {{=LOAD("records", "record_dash_cards.load", ajax=True, target="record_dash_cards_div")}}
     <br>
