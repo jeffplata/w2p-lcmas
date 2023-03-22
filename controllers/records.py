@@ -23,13 +23,14 @@ def record_users():
     # args(2) = id
 
     _btn_back = A(SPAN(_class="icon arrowleft icon-arrow-left glyphicon glyphicon-arrow-left"),
-        ' Back', _href=URL('record_users'), cid=request.cid, _class='btn btn-secondary')
+        ' Back', _href=URL('record_users', args=session.grid_query if session.grid_query else None, user_signature=True), 
+        cid=request.cid, _class='btn btn-secondary')
 
     fields = fld_user = [db.auth_user.first_name, db.auth_user.last_name, db.auth_user.middle_name,
         db.auth_user.employee_no, db.auth_user.email]
     fld_profile = [db.member_info.birth_date, db.member_info.gender, db.member_info.civil_status, db.member_info.date_membership, db.member_info.entrance_to_duty]
     
-    if request.args(0)=='edit':
+    if request.args(0) == 'edit':
         title = 'Edit user %s' % request.args(2)
         user = db.auth_user(request.args(2))
         if user:
@@ -92,7 +93,7 @@ def record_users():
         else:
             HTTP(400)
 
-    elif request.args(0)=='new_user':
+    elif request.args(0) == 'new_user':
         title = 'New user'
         fields += [db.auth_user.password]
         db.auth_user.password.readable = False
@@ -108,7 +109,7 @@ def record_users():
 
         return dict(form=form, title=title)
 
-    elif request.args(0)=='new_member':
+    elif request.args(0) == 'new_member':
         title = 'New member'
         allfields = fields + fld_profile + [db.auth_user.password]
         db.auth_user.password.readable = False
@@ -163,6 +164,18 @@ def record_users():
 
     else:
         title = 'User list'
+        query = db.auth_user
+        if request.args(0) == 'list_non_members':
+            title += ' [non members]'
+
+            m_g_id = auth.id_group('member')
+            qm = db(db.auth_membership.group_id==m_g_id)._select(db.auth_membership.user_id)
+            query = ~db.auth_user.id.belongs(qm)
+
+        elif request.args(0) == 'list_group':
+            title += f' [group: {request.args(2)}]'
+            query = (db.auth_membership.group_id==request.args(1))&(db.auth_user.id==db.auth_membership.user_id)
+
         _btn_add_user = A(SPAN(_class="icon plus icon-plus glyphicon glyphicon-plus"), ' Add user', _href=URL('record_users', args=['new_user', 'auth_user'], user_signature=True), cid=request.cid, _class='btn btn-secondary')
         _btn_add_member = A(SPAN(_class="icon plus icon-plus glyphicon glyphicon-plus"), ' Add member', _href=URL('record_users', args=['new_member', 'auth_user'], user_signature=True), cid=request.cid, _class='btn btn-secondary')
         link1 = None
@@ -170,7 +183,8 @@ def record_users():
             link1 = [ dict(header='', body=lambda r: A('Group', _class='button btn btn-default btn-secondary', 
                 _href=URL('records','record_users', args=['group', 'auth_user', r.id], user_signature=True), cid=request.cid )) ]
 
-        grid = SQLFORM.grid(db.auth_user, fields=fields, orderby=[db.auth_user.last_name|db.auth_user.first_name],
+        session.grid_query = [request.args(0), request.args(1), request.args(2)]
+        grid = SQLFORM.grid(query, fields=fields, orderby=[db.auth_user.last_name|db.auth_user.first_name],
             formname='grid_user', details=False, create=False, deletable=False, csv=False, paginate=10, links=link1)
         grid.element('.web2py_console').insert(1, _btn_add_member)
         grid.element('.web2py_console').insert(1, _btn_add_user)

@@ -1,6 +1,6 @@
 <div class="row ">
-    <div class="col-md-4">
-    <div class='p-2 m-1 rounded border border-info'>
+    <div class="col-md-4 p-1">
+    <div class='p-2 m-1 rounded border border-info' style="height: 100%">
         Member info update requests:
         <h1><strong><p class="text-center">
             {{=A(pending_requests, _href=URL("records", "record_pages", args="change_request"), cid="main_div_comp")}}
@@ -9,8 +9,8 @@
     </div>
     </div>
 
-    <div class="col-md-4">
-    <div class='p-2 m-1 rounded border border-info'>
+    <div class="col-md-4 p-1">
+    <div class='p-2 m-1 rounded border border-info' style="height: 100%">
         Member service record update requests:
         <h1><strong><p class="text-center">
             {{=A(pending_sr_requests, _href=URL("records", "record_pages", args="change_sr_request"), cid="main_div_comp")}}
@@ -19,8 +19,8 @@
     </div>
     </div>
 
-    <div class="col-md-4">
-    <div class='p-2 m-1 rounded border border-info'>
+    <div class="col-md-4 p-1">
+    <div class='p-2 m-1 rounded border border-info' style="height: 100%">
         Number of members:
         <h1><strong><p class="text-center">
             {{=A(total_members, _href=URL("records", "record_pages", args="user_list"), cid="main_div_comp")}}
