@@ -1,4 +1,4 @@
-
+<h2>Dashboard</h2>
 <div class="row">
     <div class="col-md-6  ">
         <div id="tav" class="col-md-12 border"  style="text-align: center; border-radius: 5px;">
@@ -66,7 +66,7 @@
                 <strong>{{=s.name}}</strong><br/>
                 {{=s.description}}<br/>
                 Interest rate: {{=s.interest_rate}}%<br/>
-                {{=A("Apply now", _href=URL('apply_for_loan', args=s.id, user_signature=True), _class="btn btn-primary")}}
+                {{=A("Apply now", _href=URL('apply_for_loan', args=s.id, user_signature=True), cid="main_div_comp", _class="btn btn-primary")}}
                 <br/>
                 <br/>
                 {{pass}}

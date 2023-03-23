@@ -250,25 +250,24 @@ def record_change_request():
         # set up buttons, info and da-form
         btns = ''
         info = ''
-        da_form = ''
+        reason_form = ''
         if r.status=='pending':
             btns = _btn_approve, _btn_disapprove
             s = "margin: 0px 5px 3px 0px;"
-            da_form = FORM(LABEL("Reason for disapproval:", _style=s), INPUT(_name="reason", requires=IS_NOT_EMPTY(), _class="form-control", _style=s+"width: 20em"), INPUT(_type="submit", _value="Submit", _style=s), BR(), _name="da_form", method='GET', _class="form-inline", _style="margin: 5px 0px")
+            reason_form = FORM(LABEL("Reason for disapproval:", _style=s), INPUT(_name="reason", requires=IS_NOT_EMPTY(), _class="form-control", _style=s+"width: 20em"), INPUT(_type="submit", _value="Submit", _style=s), BR(), _name="da_form", method='GET', _class="form-inline", _style="margin: 5px 0px")
         else:
             if r.status=='approved': 
                 info = SPAN(' Approved ', _class='text-success')
             elif r.status=='disapproved': 
                 info = SPAN(' Disapproved ', _class='text-danger')
 
-            # todo: include reason for disapproval
             mb = db.auth_user(r.modified_by)
             mes = '%s by %s. %s' % (r.modified_on.strftime('%m/%d/%Y'), mb.first_name + ' ' + mb.last_name, 'Reason: '+r.reason if r.status=='disapproved' else '') if mb else ''
             info = DIV(info, mes, _class='border border-info rounded p-3') 
 
         buttons = DIV(DIV(_btn_back, *btns, _class='row_buttons'), _class="web2py_grid")
         table = DIV(info, t)
-        form = da_form
+        form = reason_form
         
         has_errors = 'False'
         if form:
@@ -380,12 +379,12 @@ def record_change_sr_request():
 
         btns = ''
         info = ''
-        da_form = ''
+        reason_form = ''
         sr = sr_dep.service_record
         if sr.status=='pending':
             s = "margin: 0px 5px 3px 0px;"
             btns = _btn_approve, _btn_disapprove
-            da_form = FORM(LABEL("Reason for disapproval:", _style=s), INPUT(_name="reason", requires=IS_NOT_EMPTY(), _class="form-control", _style=s+"width: 20em"), INPUT(_type="submit", _value="Submit", _style=s), BR(), _name="da_form", method='GET', _class="form-inline", _style="margin: 5px 0px")
+            reason_form = FORM(LABEL("Reason for disapproval:", _style=s), INPUT(_name="reason", requires=IS_NOT_EMPTY(), _class="form-control", _style=s+"width: 20em"), INPUT(_type="submit", _value="Submit", _style=s), BR(), _name="da_form", method='GET', _class="form-inline", _style="margin: 5px 0px")
         else:
             if sr.status=='approved':
                 info = SPAN(' Approved ', _class='text-success')
@@ -403,7 +402,7 @@ def record_change_sr_request():
         buttons = DIV(DIV(_btn_back, *btns, _class='row_buttons'), _class="web2py_grid")
         table = DIV(DIV(info), DIV(B('Member: '), member.first_name+' '+member.last_name, _class='p-2', _style='background: #eaeaea'), t)
 
-        form = da_form
+        form = reason_form
 
         has_errors = 'False'
         if form:

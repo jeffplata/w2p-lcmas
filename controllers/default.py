@@ -11,8 +11,6 @@ def index():
     return locals()
 
 def title_and_breadcrumbs():
-    # s = request.args(0)
-    # b = request.args(1)
     t = request.vars["title"] or ""
     b = request.vars["breadcrumbs"]
     bc = {}
@@ -28,33 +26,6 @@ def title_and_breadcrumbs():
     breadcrumbs = DIV(*s, _class='rounded p-2', _style='background: #EAEAEA') if s else ''
     return dict(title=title, breadcrumbs=breadcrumbs)
 
-@auth.requires_login()
-def member_dash():
-    import datetime
-    services = db(db.service).select()
-    loans = {'date':'01/16/2023', 'type':'MCLP', 'amount':52000, 'balance':52000, 'status':'submitted'}
-    tav = 100290.00
-    last_cont_date = datetime.datetime(2023,1,9)
-    last_cont_amt = 2045.00
-    return locals()
-
-@auth.requires_login()
-def apply_for_loan():
-    service_id = request.args(0)
-    service = db(db.service.id==service_id).select().first()
-    db.loan.service_id.default = service_id
-    db.loan.member_id.default = auth.user_id
-
-    form = SQLFORM(db.loan, fields=["principal_amount", "terms",])
-    if form.process().accepted:
-        redirect(URL('loan_success'))
-
-    d = DIV(INPUT(_type="checkbox", _id="agree", value=False)," I agree to the statement of undertaking", BR(), BR(), _class="p-1")
-    form[0].insert(2, d)
-    return locals()
-
-def loan_success():
-    return locals()
 
 @auth.requires_login()
 def custom_profile():

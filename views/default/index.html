@@ -1,9 +1,9 @@
 {{extend 'layout_ext.html'}}
 
 <div id="index_div">
-{{=LOAD("default", "title_and_breadcrumbs.load", vars={"title":"Dashboard"}, ajax=True, target="title_div")}}
+{{#=LOAD("default", "title_and_breadcrumbs.load", vars={"title":"Dashboard"}, ajax=True, target="title_div")}}
 {{if auth.has_membership('member'):}}
-    {{=LOAD("default", "member_dash.load", ajax=True, target='member_dash_div')}}
+    {{=LOAD("member", "member_dash.load", ajax=True, target='member_dash_div')}}
 {{pass}}
 {{if auth.has_membership('manager'):}}
     {{=LOAD('manager', 'dashboard.load', ajax=True, target='manager_dashboard_div')}}
