@@ -12,9 +12,9 @@ def dashboard():
 
     query = db.auth_membership.group_id == db.auth_group.id
     count = db.auth_membership.id.count()
-    groups = db(db.auth_group).select(db.auth_group.id, db.auth_group.role, db.auth_membership.id,
-        count, groupby=db.auth_membership.group_id,
-        left=db.auth_membership.on(query))
+    groups = db().select(db.auth_group.id, db.auth_group.role, db.auth_membership.id, count,
+        left=db.auth_membership.on(query),
+        groupby=db.auth_group.id)
     group_links = []
     for g in groups:
         if g[count] > 0:

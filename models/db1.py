@@ -29,7 +29,7 @@ db.define_table("loan",
     Field("loan_number", "string", requires=IS_NOT_EMPTY()),
     Field("member_id", "reference auth_user"),
     Field("service_id", "reference service"),
-    Field("principal_amount", "decimal(15,2)", default=0, ),
+    Field("principal_amount", "decimal(15,2)", default=0),
     Field("interest_rate", "decimal(6,2)", default=0),
     Field("interest_amount", "decimal(15,2)", default=0),
     Field("surcharge_rate", "decimal(6,2)", default=0),
@@ -40,8 +40,13 @@ db.define_table("loan",
     Field("deductions_amount", "decimal(15,2)", default=0),
     Field("net_proceeds", "decimal(15,2)", default=0),
 
-
     auth.signature
+    )
+
+# todo: generate sequence number with templates
+db.define_table("loan_number",
+    Field("next_number"),
+    Field("number_format"),
     )
 
 db.define_table('department',
