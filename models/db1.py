@@ -45,7 +45,7 @@ db.define_table("loan",
 
 # todo: generate sequence number with templates
 db.define_table("loan_number",
-    Field("next_number"),
+    Field("next_number", "integer"),
     Field("number_format"),
     )
 

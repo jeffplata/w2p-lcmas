@@ -1,4 +1,5 @@
-
+from datetime import datetime
+import re
 
 @auth.requires_login()
 def member_dash():
@@ -16,13 +17,31 @@ def loan_success():
     return locals()
 
 
+def get_next_number(table, field):
+    fld = db[table][field]
+    db.executesql('update %s set %s=%s+1;' % (table, field, field))
+    r = db.executesql('select %s, number_format from %s' % (field, table))
+    nxn = r[0][0]
+    fmt = r[0][1]
+    fmt = datetime.now().strftime(fmt)
+    nph = re.search('\[0+\]', fmt)
+    nph = re.sub('[\[\]]', '', nph[0])
+    if len(nxn) >= len(nph):
+        nph = nxn
+    else:
+        nph = nph[0:len(nph)-len(nxn)] + nxn
+    nxn = re.sub('\[0+\]', nph, fmt)
+    return nxn
+
+
 def check_loan(form):
     if not form.vars.agree:
         form.errors.agree = ''
     if float(form.vars.principal_amount) <= 0:
         form.errors.principal_amount = 'Enter an amount greater than zero (0).'
     if not form.errors:
-        db.loan.loan_number.default = '2023-001'
+        next_number = get_next_number('loan_number', 'next_number')
+        db.loan.loan_number.default = next_number
 
 
 @auth.requires_login()
