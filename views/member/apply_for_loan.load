@@ -1,7 +1,6 @@
 
 
 <h2>Apply for Loan</h2>
-<br/>
 <div class="row p-2" >
     <div class="col-md-3 border text-muted p-2" style="border-radius: 10px">
         <strong>{{=service.name}}</strong><br>
@@ -9,32 +8,23 @@
         Interest rate: {{=service.interest_rate}}%<br>
         Service fee: {{=service.service_fee}}%<br>
     </div>
-    <div class="col-md-9">
-        <h4>Please select amount and terms:</h4>
-        {{=form}}
+    <div class="col-md-6 ">
+        <div class="web2py_user_form">
+            <h4>Please select amount and terms:</h4>
+            {{=form}}
+        </div>
+        <div id="computations" class="col-md-5 " style="padding: 5px 0 0 0;">
+        </div>
+        <div id="amortization" style="padding: 5px 0 0 0;">
+        </div>
     </div>
 </div>
 
 <script type="text/javascript">
-    // $('label').css('font-weight', 'bold');
-    // jQuery(document).ready(function(){
-    //     jQuery('form').submit(function(e){
-    //         if (!jQuery('#agree').is(':checked')) {
-    //             alert('Please check "I agree to the Undertaking statement."');
-    //             return false;
-    //         }
-    //     });
-    // });
-
-    // this is need for LOADed component views
-    // $(document).on('ajax:beforeSend', function(e, xhr, settings) {
-    //     if (settings.type === 'POST') {
-    //         if (!jQuery('#agree').is(':checked')) {
-    //             alert('Please check "I agree to the Undertaking statement."');
-    //             xhr.abort();
-    //             $.web2py.enableFormElements($('form#loan_form'));
-    //         }
-    //     }
-    // });
+    jQuery(document).ready(function(){
+        jQuery("#loan_principal_amount").change(function(){
+            ajax('{{=URL('member','compute_net_proceeds')}}', ['principal_amount'], 'computations');
+            ajax('{{=URL('member','compute_amortization')}}', ['principal_amount', 'terms'], 'amortization');
+        })
+    })
 </script>
-

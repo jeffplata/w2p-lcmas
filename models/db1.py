@@ -1,8 +1,29 @@
 
-from datetime import datetime
+from datetime import datetime, timedelta
+from calendar import monthrange
+
 me = auth.user_id
 mdy = '%m/%d/%Y'
 mdy_date = IS_DATE(format='%m/%d/%Y')
+moneytize = lambda v: '{:,.2f}'.format(v)
+
+def next_month(date, force_day=0):
+    today_date = date
+    year = today_date.year
+    month = today_date.month
+    day = today_date.day
+
+    days_in_month = monthrange(year, month)[1]
+    next_month = today_date + timedelta(days=days_in_month)
+    if next_month.month - month > 1:
+        next_month = next_month.replace(month=month+1)
+        days_in_month = monthrange(next_month.year, next_month.month)[1]
+        next_month = next_month.replace(day=days_in_month)
+    days_in_month = monthrange(next_month.year, next_month.month)[1]
+    if ((force_day>0) and (days_in_month >= force_day)):
+        next_month = next_month.replace(day=force_day)        
+    return next_month
+
 
 db.define_table("service_payment_type",
     Field("name", "string", requires=[IS_NOT_EMPTY(), IS_SLUG()]),
