@@ -8,23 +8,38 @@
         Interest rate: {{=service.interest_rate}}%<br>
         Service fee: {{=service.service_fee}}%<br>
     </div>
-    <div class="col-md-6 ">
+    <div class="col-md-6">
         <div class="web2py_user_form">
             <h4>Please select amount and terms:</h4>
             {{=form}}
         </div>
-        <div id="computations" class="col-md-5 " style="padding: 5px 0 0 0;">
+        <div id="computations">
         </div>
-        <div id="amortization" style="padding: 5px 0 0 0;">
+        <div id="amortization">
         </div>
     </div>
 </div>
 
 <script type="text/javascript">
+
     jQuery(document).ready(function(){
-        jQuery("#loan_principal_amount").change(function(){
-            ajax('{{=URL('member','compute_net_proceeds')}}', ['principal_amount'], 'computations');
-            ajax('{{=URL('member','compute_amortization')}}', ['principal_amount', 'terms'], 'amortization');
-        })
+        ajax('{{=URL('member','compute_net_proceeds')}}', ['principal_amount'], 'computations');
+        ajax('{{=URL('member','compute_amortization')}}', ['principal_amount', 'terms'], 'amortization');
+    });
+
+    jQuery("#loan_principal_amount").change(function(){
+        ajax('{{=URL('member','compute_net_proceeds')}}', ['principal_amount'], 'computations');
+        ajax('{{=URL('member','compute_amortization')}}', ['principal_amount', 'terms'], 'amortization');
+    });
+    jQuery("#loan_terms").change(function(){
+        ajax('{{=URL('member','compute_amortization')}}', ['principal_amount', 'terms'], 'amortization');
     })
+
 </script>
+
+<style>
+    #computations, #amortization {
+        padding: 5px 0 5px 0;
+        border-top: 1px solid #eaeaea;
+    }
+</style>

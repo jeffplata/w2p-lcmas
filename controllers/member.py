@@ -37,14 +37,15 @@ def get_next_number(table, next_number, number_format):
 def check_loan(form):
     if not form.vars.agree:
         form.errors.agree = ''
-    if float(form.vars.principal_amount) <= 0:
+    if (form.vars.principal_amount is None) or (float(form.vars.principal_amount) <= 0):
         form.errors.principal_amount = 'Enter an amount greater than zero (0).'
     if not form.errors:
         db.loan.loan_number.default = get_next_number('loan_number', 'next_number', 'number_format')
 
 
 def compute_net_proceeds():
-    amount = float(request.vars.principal_amount)
+    amount = request.vars.principal_amount
+    amount = 0.00 if amount == '' else float(amount)
     fee = float(session.selected_service.service_fee)
     bal = 5500.00
     fee = fee * .01 * amount
@@ -53,39 +54,47 @@ def compute_net_proceeds():
     fee = moneytize(fee)
     net = moneytize(net)
     s = H4('Computations')
-    s = DIV(s, TABLE(
-            COLGROUP(COL(_width="25%"), COL(_width="15%")),
-            TR( TD('Previous balance:'), bal, _align="right"),
-            TR( TD('Processing fee:'), fee, _align="right" ),
-            TR( TD('NET PROCEEDS:'), net, _align="right" ),
+    s = DIV(s, TABLE( 
+            # COLGROUP(COL(_width="25%"), COL(_width="15%")),
+            TR( TD('Previous balance:'), STRONG(bal), _align="right"),
+            TR( TD('Processing fee:'), STRONG(fee), _align="right"),
+            TR( TD('NET PROCEEDS:'), STRONG(net), _align="right"),
+            _class="table-responsive table-sm", 
         ))
     return s
 
 
 def compute_amortization():
-    terms = int(request.vars.terms)
-    amount = float(request.vars.principal_amount)
+    terms = request.vars.terms
+    terms = 0 if terms == '' else int(terms)
+    amount = request.vars.principal_amount
+    amount = 0.00 if amount == '' else float(amount)
+
     start_date = datetime.now().date()
-    start_date = start_date.replace(day=30)
     force_day = start_date.day
     ideal_bal = amount
     int_rate = float(session.selected_service.interest_rate) * .01
-    mo_prin = round(amount/terms,2)
+    mo_prin = round(amount/terms,2) if terms > 0 else 0
     mo_int = round(ideal_bal * int_rate, 2)
 
     s = H4('Amortization')
-    tb  = TABLE(_class='table')
+    tb = TABLE(_class='table table-sm text-right table-striped')
+    tb.append(THEAD(TR('#', TD('Due date', _class='text-center'), 'Principal', 'Interest', 'Total', 'Ideal Balance'), _style="font-weight: bold;"))
     t = [[0]*5 for i in range(terms)]
-    for i in t:
+    for k, i in enumerate(t):
         start_date = next_month(start_date, force_day)
         i[0] = start_date.strftime('%m/%d/%Y')
-        i[1] = mo_prin if mo_prin < ideal_bal else ideal_bal
-        i[2] = mo_int
+        if k < len(t)-1:
+            i[1] = mo_prin
+        else:
+            i[1] = ideal_bal
+        mo_prin = i[1]
+        i[2] = mo_int = round(ideal_bal * int_rate, 2)
         i[3] = mo_prin + mo_int
         i[4] = round(ideal_bal - mo_prin, 2) if mo_prin < ideal_bal else 0
         ideal_bal = i[4]
-        tb.append(TR(i[0], i[1], i[2], i[3], i[4]))
-    s = DIV(s, t)
+        tb.append(TR(k+1, TD(i[0], _class='text-center'), moneytize(i[1]), moneytize(i[2]), moneytize(i[3]), moneytize(i[4])))
+    s = DIV(s, tb)
     return s
 
 
@@ -124,7 +133,7 @@ def apply_for_loan():
         , _style='margin-bottom: 15px;')
 
     form[0].insert(2, d)
-    form.element('#submit_record__row')[1].insert(1, _btn_back)
+    form.element('#submit_record__row')[1].insert(0, _btn_back)
 
     if form.process(onvalidation=check_loan).accepted:
         response.flash  = ''
