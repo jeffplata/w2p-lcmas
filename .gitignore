@@ -1,6 +1,7 @@
 # for web2py
 cache
-databases
+# let's include databases in development
+# databases
 errors
 sessions
 

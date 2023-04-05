@@ -6,11 +6,21 @@ me = auth.user_id
 mdy = '%m/%d/%Y'
 mdy_date = IS_DATE(format='%m/%d/%Y')
 moneytize = lambda v: '{:,.2f}'.format(v)
-is_in_yes_no = IS_IN_SET([(1, 'yes'), (0, 'no')], zero=None)
-represent_yes_no = lambda v, r : SPAN('no', _class='bg-warning') if v=='no' else v
+# is_in_yes_no = IS_IN_SET([(1, 'yes'), (0, 'no')], zero=None)
+# represent_yes_no = lambda v, r : SPAN('no', _class='bg-warning') if v=='no' else v
+# validTerms = ['6','12','24','36','48','60']
+validTerms = [6,12,24,36,48,60]
+validTerms = [str(n) for n in validTerms]
 
-def yesno_widget(field, value):
-    return SELECT('yes', 'no', _id='yesno_select')
+# def yesno_widget(field, value):
+#     return SELECT('yes', 'no', _id='yesno_select')
+
+def is_float(s):
+    try:
+        float(s)
+    except ValueError:
+        return False
+    return True
 
 def next_month(date, force_day=0):
     today_date = date

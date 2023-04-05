@@ -28,14 +28,43 @@ def title_and_breadcrumbs():
 
 
 def validate_library(form):
-    print('validate_library: ', form.vars)
     form.vars.is_active = True if form.vars.is_active in ['yes','True'] else False
+
+    # validate terms
+
+    def validate_terms(trm):
+        invalid_terms = []
+        for n in trm.split(','):
+            if n not in validTerms:
+                invalid_terms += [n]
+        if invalid_terms: form.errors.terms = f'Incorrect terms: {invalid_terms}'
+                # break
+
+    terms = form.vars.terms.replace(' ','')
+    form.vars.terms = terms
+    if terms:
+        for t in terms.splitlines():
+            if '=' in t:
+                amt, trm = t.split('=', 1)
+                if is_float(amt):
+                    amt = float(amt)
+                    if not trm:
+                        form.errors.terms = 'Incorrect terms.'
+                    else:
+                        validate_terms(trm)
+                else:
+                    form.errors.terms = f'Incorrect format. [{amt}]'
+            else:
+                validate_terms(t)
 
 
 @auth.requires_login()
 def library():
+    fields = 'id,name,description,interest_rate,service_fee,minimum_amount,maximum_amount,payment_type_id,terms,is_active'
     grid = SQLFORM.grid(db.service, formname='grid_services', create=True, csv=False, paginate=20, 
-            searchable=True, editable=True, deletable=False, onvalidation=validate_library)
+            searchable=True, editable=True, deletable=False, onvalidation=validate_library,
+            fields=[db.service[i] for i in fields.split(',')],
+            headers={'service.minimum_amount':'Minimum','service.maximum_amount':'Maximum','service.interest_rate':'Interest %'})
     return dict(grid=grid)
 
 
