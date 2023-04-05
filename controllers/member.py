@@ -34,7 +34,7 @@ def get_next_number(table, next_number, number_format):
     return nxn
 
 
-def check_loan(form):
+def validate_loan(form):
     if not form.vars.agree:
         form.errors.agree = ''
     if (form.vars.principal_amount is None) or (float(form.vars.principal_amount) <= 0):
@@ -135,7 +135,7 @@ def apply_for_loan():
     form[0].insert(2, d)
     form.element('#submit_record__row')[1].insert(0, _btn_back)
 
-    if form.process(onvalidation=check_loan).accepted:
+    if form.process(onvalidation=validate_loan).accepted:
         response.flash  = ''
         redirect(URL('loan_success'))
     elif form.errors:

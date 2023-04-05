@@ -27,6 +27,18 @@ def title_and_breadcrumbs():
     return dict(title=title, breadcrumbs=breadcrumbs)
 
 
+def validate_library(form):
+    print('validate_library: ', form.vars)
+    form.vars.is_active = True if form.vars.is_active in ['yes','True'] else False
+
+
+@auth.requires_login()
+def library():
+    grid = SQLFORM.grid(db.service, formname='grid_services', create=True, csv=False, paginate=20, 
+            searchable=True, editable=True, deletable=False, onvalidation=validate_library)
+    return dict(grid=grid)
+
+
 @auth.requires_login()
 def custom_profile():
     response.view = 'default/custom_user.html'

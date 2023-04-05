@@ -1,0 +1,9 @@
+
+<h4>Services</h4>
+<div>
+    {{=grid}}
+</div>
+
+<script>
+    jQuery("#service_terms").css("height", "150px");
+</script>

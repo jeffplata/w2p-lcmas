@@ -16,3 +16,9 @@
     {{=LOAD("records", "record_users.load", ajax=True, target="record_users_div")}}
 {{pass}}
 </div>
+
+
+<script>
+    var s = $(".dropdown-menu a:contains('Services')").attr( 'data-w2p_target','main_div_comp' );
+    s.attr("data-w2p_method", "GET");
+</script>
