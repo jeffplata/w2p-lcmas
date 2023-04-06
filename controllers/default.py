@@ -65,6 +65,8 @@ def library():
             searchable=True, editable=True, deletable=False, onvalidation=validate_library,
             fields=[db.service[i] for i in fields.split(',')],
             headers={'service.minimum_amount':'Minimum','service.maximum_amount':'Maximum','service.interest_rate':'Interest %'})
+    if grid.view_form:
+        grid.view_form.element('#service_terms__row .col-sm-9')["_style"] = 'white-space:pre'
     return dict(grid=grid)
 
 
