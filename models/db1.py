@@ -75,7 +75,7 @@ db.define_table("loan",
     Field("surcharge_amount", "decimal(15,2)", default=0),
     Field("service_fee_rate", "decimal(6,2)", default=0),
     Field("service_fee_amount", "decimal(15,2)", default=0),
-    Field("terms", "integer", default=12),
+    Field("terms", "integer", default=12, requires=IS_IN_SET(validTerms)),
     Field("deductions_amount", "decimal(15,2)", default=0),
     Field("net_proceeds", "decimal(15,2)", default=0),
 
