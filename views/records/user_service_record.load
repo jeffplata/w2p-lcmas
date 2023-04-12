@@ -1,0 +1,15 @@
+<div class='p-2 m-1 rounded border'>
+    <h4>{{=title}}</h4>
+    {{=crumbs}}
+    {{if grid.create_form or grid.update_form or grid.view_form:}}
+        <div class="col-lg-6 ">
+            {{=grid}}
+        </div>
+    {{else:}}
+        {{=grid}}
+    {{pass}}
+</div>
+
+<script>
+    jQuery('.button').closest('td').attr('class', 'row_buttons');
+</script>

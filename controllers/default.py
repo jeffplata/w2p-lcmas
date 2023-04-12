@@ -178,6 +178,9 @@ def service_record():
         db.service_record.user_id.readable = False
         db.service_record.status.writable = False
         db.service_record.status.readable = False
+        db.service_record.reason.writable = False
+        db.service_record.reason.readable = False
+
         form = SQLFORM.factory(db.service_record)
 
     departments = {}

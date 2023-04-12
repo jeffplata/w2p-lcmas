@@ -113,7 +113,7 @@ def apply_for_loan():
 
     # jterms = [[50000, ['12', '24']], [60000, ['24', '36']]]
     jterms = [i for i in service.terms.splitlines()]
-    print(jterms)
+    # print(jterms)
 
     form = SQLFORM(db.loan, fields=['principal_amount', 'terms'], formname='loan_form')
 

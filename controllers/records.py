@@ -1,7 +1,37 @@
 # -*- coding: utf-8 -*-
 # try something like
+def bread_crumbs(crumbs,cid=None):
+    links = None
+    c_len = len(crumbs)
+    e = []
+    if crumbs:
+        links = DIV([(A(f'{k}', _href=f'{v}', cid=cid) if v else SPAN(k))+SPAN(' / ' if i+1 != c_len else '') for i, (k, v) in enumerate(crumbs.items())],
+            _class='rounded p-2', _style='background: #EAEAEA; margin: 5px 0;')
+    return links
+
+
 def record_pages():
     return dict(page=request.args(0))
+
+
+def user_service_record():
+    user = db.auth_user(request.vars['user_id'])
+    title = f'Service record of {user.first_name} {user.last_name}'
+    crumbs = bread_crumbs(
+        {'User list':URL('records', 'record_users', args=session.grid_query or None, user_signature=True),
+         user.first_name+' '+user.last_name:'',
+         'Service record':''
+        }, 
+        request.cid)
+    query = db.service_record.user_id == user.id
+    db.service_record.user_id.default = user.id
+    fields = 'date_effective,department_id,mem_position,salary,status'
+    grid = SQLFORM.grid(query, formname='grid_user_service_record', csv=False, searchable=False, deletable=False,
+        fields=[db.service_record[i] for i in fields.split(',')],
+        createargs=dict(submit_button='Add service record'),
+        formargs=dict(fields=[i for i in fields.split(',')[:-1]])
+        )
+    return locals()
 
 @auth.requires_login()
 def record_dash_cards():
@@ -130,6 +160,22 @@ def record_users():
 
         return dict(form=form, title=title)
 
+    # elif request.args(0) == 'service_record':
+    #     user = db.auth_user(request.args(2))
+    #     title = f'Service record of {user.first_name} {user.last_name}'
+    #     query = db.service_record.user_id == user.id
+
+    #     grid = SQLFORM.grid(query, formname='grid_user_service_record', csv=False, searchable=False, create=True)
+    #     db.service_record.user_id.default = user.id
+    #     fields = 'date_effective,department_id,mem_position,salary'
+    #     form = SQLFORM(db.service_record, fields=[i for i in fields.split(',')], formname='form_user_service_record',
+    #         submit_button='Add service record')
+    #     if form.process().accepted:
+    #         response.flash = 'Service record added'
+    #         redirect(URL('records', 'record_users', args=['service_record', 'auth_user', request.args(2)], user_signature=True))
+
+    #     return dict(grid=grid, form=form, title=title, button=_btn_back)
+
     elif request.args(0) == 'group':
         user = db.auth_user(request.args(2))
         title = 'Assign user %s to group' % (user.first_name + ' ' + user.last_name)
@@ -178,12 +224,19 @@ def record_users():
 
         _btn_add_user = A(SPAN(_class="icon plus icon-plus glyphicon glyphicon-plus"), ' Add user', _href=URL('record_users', args=['new_user', 'auth_user'], user_signature=True), cid=request.cid, _class='btn btn-secondary')
         _btn_add_member = A(SPAN(_class="icon plus icon-plus glyphicon glyphicon-plus"), ' Add member', _href=URL('record_users', args=['new_member', 'auth_user'], user_signature=True), cid=request.cid, _class='btn btn-secondary')
-        link1 = None
+        
+        # _link_sr = dict(header='', body=lambda r: A('Service Record', _class='button btn btn-default btn-secondary', 
+        #     _href=URL('records','record_users', args=['service_record', 'auth_user', r.id], user_signature=True), cid=request.cid ))
+        # here
+        _link_sr = dict(header='', body=lambda r: A('Service Record', _class='button btn btn-default btn-secondary', 
+            _href=URL('records','user_service_record.load', vars={'user_id':r.id}, user_signature=True), cid=request.cid ))
+        link1 = [_link_sr]
         if auth.has_membership('manager'):
-            link1 = [ dict(header='', body=lambda r: A('Group', _class='button btn btn-default btn-secondary', 
-                _href=URL('records','record_users', args=['group', 'auth_user', r.id], user_signature=True), cid=request.cid )) ]
-
-        session.grid_query = [request.args(0), request.args(1), request.args(2)]
+            _link_group = dict(header='', body=lambda r: A('Group', _class='button btn btn-default btn-secondary', 
+                _href=URL('records','record_users', args=['group', 'auth_user', r.id], user_signature=True), cid=request.cid ))
+            link1 += [_link_group]
+        # session.grid_query = [request.args(0), request.args(1), request.args(2)]
+        session.grid_query = f'{request.args(0)}/{request.args(1)}/{request.args(2)}'
         grid = SQLFORM.grid(query, fields=fields, orderby=[db.auth_user.last_name|db.auth_user.first_name],
             formname='grid_user', details=False, create=False, deletable=False, csv=False, paginate=10, links=link1)
         grid.element('.web2py_console').insert(1, _btn_add_member)

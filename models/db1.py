@@ -40,6 +40,11 @@ def next_month(date, force_day=0):
     return next_month
 
 
+# set up auth_membership
+db.auth_membership.user_id.label = 'User'
+db.auth_membership.group_id.label = 'Group'
+
+
 db.define_table("service_payment_type",
     Field("name", "string", requires=[IS_NOT_EMPTY(), IS_SLUG()]),
     format = '%(name)s')
@@ -75,7 +80,7 @@ db.define_table("loan",
     Field("surcharge_amount", "decimal(15,2)", default=0),
     Field("service_fee_rate", "decimal(6,2)", default=0),
     Field("service_fee_amount", "decimal(15,2)", default=0),
-    Field("terms", "integer", default=12, requires=IS_IN_SET(validTerms)),
+    Field("terms", "integer", default=12, requires=IS_IN_SET(validTerms, zero=None)),
     Field("deductions_amount", "decimal(15,2)", default=0),
     Field("net_proceeds", "decimal(15,2)", default=0),
 
