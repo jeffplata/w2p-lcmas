@@ -6,14 +6,9 @@ me = auth.user_id
 mdy = '%m/%d/%Y'
 mdy_date = IS_DATE(format='%m/%d/%Y')
 moneytize = lambda v: '{:,.2f}'.format(v)
-# is_in_yes_no = IS_IN_SET([(1, 'yes'), (0, 'no')], zero=None)
-# represent_yes_no = lambda v, r : SPAN('no', _class='bg-warning') if v=='no' else v
-# validTerms = ['6','12','24','36','48','60']
-validTerms = [6,12,24,36,48,60]
+validTerms = [1,6,12,24,36,48,60]
 validTerms = [str(n) for n in validTerms]
 
-# def yesno_widget(field, value):
-#     return SELECT('yes', 'no', _id='yesno_select')
 
 def is_float(s):
     try:
@@ -21,6 +16,7 @@ def is_float(s):
     except ValueError:
         return False
     return True
+
 
 def next_month(date, force_day=0):
     today_date = date
@@ -57,8 +53,10 @@ db.define_table("service",
     Field("service_fee","decimal(6,2)",default=0),
     Field("minimum_amount", "decimal(15,2)", default=0, 
         represent=lambda v, r: '{:,}'.format(v) if v is not None else ''),
-    Field("maximum_amount", "decimal(15,2)", default=0, 
-        represent=lambda v, r: '{:,}'.format(v) if v is not None else ''),
+    # Field("maximum_amount", "decimal(15,2)", default=0, 
+    #     represent=lambda v, r: '{:,}'.format(v) if v is not None else ''),
+    Field("maximum_amount", "string", default=0, 
+        represent=lambda v, r: '{:,}'.format(v) if is_float(v) else v),
     Field("payment_type_id", "reference service_payment_type", label="Payment Type"),
     Field("terms", "string", widget=SQLFORM.widgets.text.widget),
     Field("is_active", "boolean", label="Active", requires=IS_IN_SET([(True,'yes'), (False,'no')], zero=None), 
@@ -80,7 +78,7 @@ db.define_table("loan",
     Field("surcharge_amount", "decimal(15,2)", default=0),
     Field("service_fee_rate", "decimal(6,2)", default=0),
     Field("service_fee_amount", "decimal(15,2)", default=0),
-    Field("terms", "integer", default=12, requires=IS_IN_SET(validTerms, zero=None)),
+    Field("terms", "integer", requires=IS_IN_SET(validTerms, zero=None)),
     Field("deductions_amount", "decimal(15,2)", default=0),
     Field("net_proceeds", "decimal(15,2)", default=0),
 

@@ -1,8 +1,14 @@
 
 <h4>Services</h4>
-<div>
-    {{=grid}}
-</div>
+{{if grid.create_form or grid.update_form or grid.view_form:}}
+    <div class='col-lg-6'>
+        {{=grid}}
+    </div>
+{{else:}}
+    <div>
+        {{=grid}}
+    </div>
+{{pass}}
 
 <script>
     jQuery("#service_terms").css("height", "150px");

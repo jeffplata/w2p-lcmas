@@ -111,15 +111,15 @@ def apply_for_loan():
     db.loan.service_id.default = service_id
     db.loan.member_id.default = auth.user_id
 
-    # jterms = [[50000, ['12', '24']], [60000, ['24', '36']]]
     jterms = [i for i in service.terms.splitlines()]
-    # print(jterms)
 
     form = SQLFORM(db.loan, fields=['principal_amount', 'terms'], formname='loan_form')
 
     lorem = '''
         In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the 
-        visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used 
+        visual form of a document or a typeface without relying on meaningful content. 
+
+        Lorem ipsum may be used 
         as a placeholder before final copy is available.
     '''
 
@@ -136,10 +136,8 @@ def apply_for_loan():
             )
         , _style='margin-bottom: 15px;')
 
-    # h = INPUT(_type='hidden', _value = service.terms)
 
     form[0].insert(2, d)
-    # form[0].insert(2, h)
     form.element('#submit_record__row')[1].insert(0, _btn_back)
 
     if form.process(onvalidation=validate_loan).accepted:

@@ -6,7 +6,9 @@
     {{finally:}}
     {{pass}}
     {{if request.args(0) in ['edit', 'new_user', 'new_member']:}}
-        {{=form}}
+        <div class="col-lg-6 ">
+            {{=form}}
+        </div>
     {{elif request.args(0) == 'group':}}
         <div class="col-lg-6 ">
             {{=grid}}

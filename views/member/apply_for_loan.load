@@ -22,16 +22,7 @@
 
 <script type="text/javascript">
 
-    {{=ASSIGNJS(terms=jterms)}}
-    var el_amount = $("#loan_principal_amount");
-    var el_terms = $('#loan_terms');
-
-    jQuery(document).ready(function(){
-        ajax('{{=URL('member','compute_net_proceeds')}}', ['principal_amount'], 'computations');
-        ajax('{{=URL('member','compute_amortization')}}', ['principal_amount', 'terms'], 'amortization');
-    });
-
-    jQuery("#loan_principal_amount").change(function(){
+    function update_terms() {
         if (terms.length > 1) {
             $.each(terms, function(k, v) {
                 if ((parseFloat(el_amount.val())*100)<=(parseFloat(v.split('=')[0])*100)) {
@@ -45,14 +36,33 @@
         }
         else {
             el_terms.empty();
-            // console.log(terms);
             $.each(terms[0].split(','), function(k, v){
                 el_terms.append($("<option></option>").attr('value', v,).text(v));
             })
         };
         ajax('{{=URL('member','compute_net_proceeds')}}', ['principal_amount'], 'computations');
         ajax('{{=URL('member','compute_amortization')}}', ['principal_amount', 'terms'], 'amortization');
+    };
 
+    {{=ASSIGNJS(terms=jterms)}}
+    {{=ASSIGNJS(form_errors=form.errors)}}
+    var el_amount = $("#loan_principal_amount");
+    var el_terms = $('#loan_terms');
+
+    jQuery(document).ready(function(){
+        if (form_errors) {
+            update_terms()
+        }
+        ajax('{{=URL('member','compute_net_proceeds')}}', ['principal_amount'], 'computations');
+        ajax('{{=URL('member','compute_amortization')}}', ['principal_amount', 'terms'], 'amortization');
+    });
+
+    jQuery("#loan_principal_amount").change(function(){
+        update_terms();
+    });
+
+    jQuery("#loan_principal_amount").blur(function(){
+        update_terms();
     });
 
     jQuery("#loan_terms").change(function(){

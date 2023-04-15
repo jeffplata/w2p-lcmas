@@ -43,6 +43,12 @@ def record_dash_cards():
     total_non_members = db(db.auth_user).count() - total_members
     return locals()
 
+
+def get_member_salary(member_id):
+    r = db((db.service_record.user_id==member_id) & (db.service_record.status!='pending')).\
+            select(db.service_record.salary, orderby=~db.service_record.id).first()
+    return moneytize(r['salary']) if r else ''
+
 # users/view
 # users/update
 # users/group
@@ -160,22 +166,6 @@ def record_users():
 
         return dict(form=form, title=title)
 
-    # elif request.args(0) == 'service_record':
-    #     user = db.auth_user(request.args(2))
-    #     title = f'Service record of {user.first_name} {user.last_name}'
-    #     query = db.service_record.user_id == user.id
-
-    #     grid = SQLFORM.grid(query, formname='grid_user_service_record', csv=False, searchable=False, create=True)
-    #     db.service_record.user_id.default = user.id
-    #     fields = 'date_effective,department_id,mem_position,salary'
-    #     form = SQLFORM(db.service_record, fields=[i for i in fields.split(',')], formname='form_user_service_record',
-    #         submit_button='Add service record')
-    #     if form.process().accepted:
-    #         response.flash = 'Service record added'
-    #         redirect(URL('records', 'record_users', args=['service_record', 'auth_user', request.args(2)], user_signature=True))
-
-    #     return dict(grid=grid, form=form, title=title, button=_btn_back)
-
     elif request.args(0) == 'group':
         user = db.auth_user(request.args(2))
         title = 'Assign user %s to group' % (user.first_name + ' ' + user.last_name)
@@ -225,12 +215,12 @@ def record_users():
         _btn_add_user = A(SPAN(_class="icon plus icon-plus glyphicon glyphicon-plus"), ' Add user', _href=URL('record_users', args=['new_user', 'auth_user'], user_signature=True), cid=request.cid, _class='btn btn-secondary')
         _btn_add_member = A(SPAN(_class="icon plus icon-plus glyphicon glyphicon-plus"), ' Add member', _href=URL('record_users', args=['new_member', 'auth_user'], user_signature=True), cid=request.cid, _class='btn btn-secondary')
         
-        # _link_sr = dict(header='', body=lambda r: A('Service Record', _class='button btn btn-default btn-secondary', 
-        #     _href=URL('records','record_users', args=['service_record', 'auth_user', r.id], user_signature=True), cid=request.cid ))
-        # here
         _link_sr = dict(header='', body=lambda r: A('Service Record', _class='button btn btn-default btn-secondary', 
-            _href=URL('records','user_service_record.load', vars={'user_id':r.id}, user_signature=True), cid=request.cid ))
-        link1 = [_link_sr]
+            _href=URL('records','user_service_record.load', vars={'user_id':r.id}, user_signature=True), cid=request.cid )
+            if auth.has_membership(auth.id_group('member'), r.id) else 'non-member'
+            )
+        _link_mbs = dict(header='Salary', body=lambda r: get_member_salary(r.id))
+        link1 = [_link_mbs, _link_sr]
         if auth.has_membership('manager'):
             _link_group = dict(header='', body=lambda r: A('Group', _class='button btn btn-default btn-secondary', 
                 _href=URL('records','record_users', args=['group', 'auth_user', r.id], user_signature=True), cid=request.cid ))
@@ -400,6 +390,7 @@ def record_change_sr_request():
                     _class='btn btn-secondary', cid=request.cid )
     # _btn_disapprove =  A('Disapprove', _href=URL('record_change_sr_request', args=['disapprove', request.args(1), request.args(2)], user_signature=True), _class='btn', cid=request.cid)
     _btn_disapprove =  A('Disapprove', _href='#', _name="disapprove_btn", _class='btn')
+    # todo: disapprove sr change request
     link1 = dict(header='', body=lambda r: A('View', _class='button btn btn-default btn-secondary', 
         _href=URL('records','record_change_sr_request', args=['view', 'service_record', r.id], user_signature=True), cid=request.cid ))
 
@@ -407,8 +398,8 @@ def record_change_sr_request():
     if request.args(0)=='view':
         this_id = request.args(2)
         sr_dep = db(db.service_record.id==this_id).select(join=db.department.on(db.department.id==db.service_record.department_id)).first()
-        p_id = db((db.service_record.status!='pending') & (db.service_record.id!=this_id)).select().first()
         member = db.auth_user(sr_dep.service_record.user_id)
+        p_id = db((db.service_record.status!='pending') & (db.service_record.id!=this_id) & (db.service_record.user_id==member.id)).select().first()
         if p_id:
             p_id = p_id['id'] # id of latest sr for this member
             prev_sr_dep = db(db.service_record.id==p_id).select(join=db.department.on(db.department.id==db.service_record.department_id)).first()
