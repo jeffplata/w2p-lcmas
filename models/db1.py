@@ -67,6 +67,17 @@ db.service.payment_type_id.requires = IS_IN_DB(db, db.service_payment_type.id, '
 
 db.auth_user.format = "%(last_name)s"
 
+db.define_table("bank",
+    Field("bank_name", "string", length=80),
+    Field("short_name", "string", length=20),
+    format="%(bank_name)s"
+    )
+
+if db(db.bank).isempty():
+    db.bank.insert(bank_name="LandBank of the Philippines", short_name="LBP")
+    db.bank.insert(bank_name="Development Bank of the Philippines", short_name="DBP")
+    db.bank.insert(bank_name="Philippine National Bank", short_name="PNB")
+
 db.define_table("loan",
     Field("loan_number", "string", requires=IS_NOT_EMPTY()),
     Field("member_id", "reference auth_user"),
@@ -81,6 +92,10 @@ db.define_table("loan",
     Field("terms", "integer", requires=IS_IN_SET(validTerms, zero=None)),
     Field("deductions_amount", "decimal(15,2)", default=0),
     Field("net_proceeds", "decimal(15,2)", default=0),
+
+    Field("bank_id", "reference bank", label="Bank", requires=IS_IN_DB(db, db.bank.id, "%(bank_name)s", zero=None)),
+    Field("account_number", "string", length=25),
+    Field("account_name", "string"),
 
     auth.signature
     )

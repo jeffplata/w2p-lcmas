@@ -113,7 +113,9 @@ def apply_for_loan():
 
     jterms = [i for i in service.terms.splitlines()]
 
-    form = SQLFORM(db.loan, fields=['principal_amount', 'terms'], formname='loan_form')
+    # fields = 'principal_amount terms bank_id account_number account_name'
+    fields = 'principal_amount terms'
+    form = SQLFORM(db.loan, fields=[i for i in fields.split()], formname='loan_form', submit_button='Next')
 
     lorem = '''
         In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the 
@@ -138,11 +140,13 @@ def apply_for_loan():
 
 
     form[0].insert(2, d)
+    # form[0].insert(5, d)
     form.element('#submit_record__row')[1].insert(0, _btn_back)
 
-    if form.process(onvalidation=validate_loan).accepted:
+    if form.process(onvalidation=validate_loan, dbio=False).accepted:
         response.flash  = ''
-        redirect(URL('loan_success'))
+        # redirect(URL('loan_success'))
+        redirect(URL('finalize_loan'))
     elif form.errors:
         response.flash = ''
         if form.vars.agree != 'on':
@@ -152,4 +156,10 @@ def apply_for_loan():
     else:
         response.js = "jQuery('#must_agree').hide();"
 
+    return locals()
+
+
+def finalize_loan():
+    service =  session.selected_service
+    form = SQLFORM.factory()
     return locals()

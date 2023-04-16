@@ -1,8 +1,6 @@
-
-
 <h2>Apply for Loan</h2>
 <div class="row p-2" >
-    <div class="col-md-3 border text-muted p-2" style="border-radius: 10px">
+    <div class="col-md-2 border text-muted p-2" style="border-radius: 10px">
         <strong>{{=service.name}}</strong><br>
         {{=service.description}}<br>
         Interest rate: {{=service.interest_rate}}%<br>
